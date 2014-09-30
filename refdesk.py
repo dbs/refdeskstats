@@ -2,7 +2,7 @@
 
 from flask import Flask, abort, request, render_template
 from os.path import abspath, dirname
-from datetime import date
+import datetime
 import psycopg2
 import sqlite3
 
@@ -78,7 +78,7 @@ def eat_stat_form():
 
 def show_stat_form():
     "Show the pretty form for the user"
-    return render_template('stat_form.html', today=date.today().isoformat())
+    return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()))
 
 if __name__ == '__main__':
     app.run(debug=True, host="0.0.0.0", port=5555)
