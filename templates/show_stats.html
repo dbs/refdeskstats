@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Show Research Help Stats</title>
+</head>
+<body>
+  <ul>
+    {% for date in dates %}
+      <li><a href=''>{{ date.refdate }}</a></li>
+    {% else %}
+      <li>Unpossible, no dates have data input</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
