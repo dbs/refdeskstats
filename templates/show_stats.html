@@ -4,12 +4,20 @@
   <title>Show Research Help Stats</title>
 </head>
 <body>
-  <ul>
-    {% for date in dates %}
-      <li><a href="/download/{{ date.refdate }}">{{ date.refdate }}</a></li>
-    {% else %}
-      <li>Unpossible, no dates have data input</li>
-    {% endfor %}
-  </ul>
+    <h1>Ref Desk Statistics</h1>
+    <div id="menu">
+        <ul>
+            <li><a href="/refdesk-stats">Enter Statistics</a></li>
+            <li><a href="/refstats">View Statistics</a></li>
+        </ul>
+        <hr>
+    </div>
+    <ul>
+        {% for date in dates %}
+        <li><a href="/download/{{ date.refdate }}">{{ date.refdate }}</a></li>
+        {% else %}
+        <li>Unpossible, no dates have data input</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
