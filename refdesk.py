@@ -1,10 +1,12 @@
 "Collect daily reference desk statistics in a database"
 
-from flask import Flask, abort, request, render_template
+from flask import Flask, abort, request, render_template, Response, make_response
 from os.path import abspath, dirname
 import datetime
 import psycopg2
 import sqlite3
+import StringIO
+import csv
 
 # Database connection info
 DB_NAME = 'refstats'
@@ -98,12 +100,52 @@ def get_stats():
     except Exception, e:
         print(e)
 
+def get_csv(filename):
+    "Get the data in CSV format"
+    #filename = flask.request.args.get('filename', '')
+    try:
+        data = get_db()
+        cur = data.cursor()
+	    #filename = '2014-09-08'
+	    #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
+	    cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
+	    #cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate='2014-09-08'")
+	    csvgen = StringIO.StringIO()
+	    csvfile = csv.writer(csvgen)
+	    for row in cur.fetchall():
+		    #wstr = str(row[0]),str(row[1]),str(row[2])
+		    csvfile.writerow([row[0], row[1], row[2]]) 
+	    csv_result = csvgen.getvalue()
+	    csvgen.close()
+	    #csv = "column1, column2, column3"
+        data.commit()
+        data.close()
+        return csv_result
+    except Exception, e:
+        print(e)
+
 @app.route('/showRefdesk-stats', methods=['GET'])
 def show_stats():
     "Lets try to get all dates with data input"
     try:
         dates = get_stats()
         return render_template('show_stats.html', dates=dates)
+    except:
+        return abort(500)
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    try:
+	filename = str(filename)
+        #filename = flask.request.args.get('filename', '')
+	    #print(filename)
+        csv = get_csv(filename)
+	    print(csv)
+        response = make_response(csv)
+        response_header = "attachment; fname=" + filename + ".csv"
+	    response.headers["Content-Type"] = 'text/csv'
+        response.headers["Content-Disposition"] = response_header
+        return response
     except:
         return abort(500)
 
