@@ -76,7 +76,8 @@ def eat_stat_form():
                 cur.execute('INSERT INTO refstats (refdate, refstat, refcount) VALUES (%s, %s, %s)', (fdate, key, val))
         dbh.commit()
         dbh.close()
-        return "Your form was successfully submitted."
+        message = "Your form was successfully submitted."
+        return render_template('menu_interface.html', message=message)
     except:
         return abort(500)
 
@@ -89,7 +90,7 @@ def get_stats():
     try:
         dbase = get_db()
         cur = dbase.cursor()
-        cur.execute('SELECT DISTINCT refdate FROM refstats')
+        cur.execute('SELECT DISTINCT refdate FROM refstats ORDER BY refdate desc')
         dates = [dict(refdate=row[0]) for row in cur.fetchall()]
         # dates = ('2004-10-01', '2014-10-31')
         if dbase.closed:
@@ -106,18 +107,18 @@ def get_csv(filename):
     try:
         data = get_db()
         cur = data.cursor()
-	    #filename = '2014-09-08'
-	    #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
-	    cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
-	    #cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate='2014-09-08'")
-	    csvgen = StringIO.StringIO()
-	    csvfile = csv.writer(csvgen)
-	    for row in cur.fetchall():
-		    #wstr = str(row[0]),str(row[1]),str(row[2])
-		    csvfile.writerow([row[0], row[1], row[2]]) 
-	    csv_result = csvgen.getvalue()
-	    csvgen.close()
-	    #csv = "column1, column2, column3"
+	#filename = '2014-09-08'
+	#print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
+	cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
+	#cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate='2014-09-08'")
+	csvgen = StringIO.StringIO()
+	csvfile = csv.writer(csvgen)
+	for row in cur.fetchall():
+		#wstr = str(row[0]),str(row[1]),str(row[2])
+		csvfile.writerow([row[0], row[1], row[2]]) 
+	csv_result = csvgen.getvalue()
+	csvgen.close()
+	#csv = "column1, column2, column3"
         data.commit()
         data.close()
         return csv_result
@@ -138,12 +139,12 @@ def download_file(filename):
     try:
 	filename = str(filename)
         #filename = flask.request.args.get('filename', '')
-	    #print(filename)
+	print(filename)
         csv = get_csv(filename)
-	    print(csv)
+	print(csv)
         response = make_response(csv)
         response_header = "attachment; fname=" + filename + ".csv"
-	    response.headers["Content-Type"] = 'text/csv'
+	response.headers["Content-Type"] = 'text/csv'
         response.headers["Content-Disposition"] = response_header
         return response
     except:

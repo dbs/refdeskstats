@@ -6,7 +6,6 @@
 <body>
   <ul>
     {% for date in dates %}
-      <!--<li><a href='http://biblio-dev.laurentian.ca:6666/download/2014-09-08'>{{ date.refdate }}</a></li>-->
       <li><a href="/download/{{ date.refdate }}">{{ date.refdate }}</a></li>
     {% else %}
       <li>Unpossible, no dates have data input</li>
