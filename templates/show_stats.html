@@ -2,6 +2,31 @@
 <head>
   <meta charset="utf-8">
   <title>Show Research Help Stats</title>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <!--<script src="https://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="jquery.csv-0.71.js"></script>-->
+    <script type="text/javascript">
+        //load the visualization library from Google and set a listener
+	    google.load("visualization", "1", {packages:["corechart"]});
+	    google.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            //Create the data table
+            var data = new google.visualization.DataTable({
+                 "cols": [ {"label":"refstat","type":"string"},
+                           {"label":"refcount","type":"number"}],
+                 "rows": {{array|tojson|safe}}
+            });
+            var options = {
+                title: "Data for November 18, 2014",
+                legend: 'none'
+            };
+
+            //bind the chart to the div
+            var chart = new google.visualization.BarChart(document.getElementById('chart'));
+            chart.draw(data, options);
+        }
+    </script>
 </head>
 <body>
     <h1>Ref Desk Statistics</h1>
@@ -12,12 +37,18 @@
         </ul>
         <hr>
     </div>
+    <p>Listed below are all the days that have statistics entered</p>
     <ul>
         {% for date in dates %}
         <li><a href="/download/{{ date.refdate }}">{{ date.refdate }}</a></li>
         {% else %}
         <li>Unpossible, no dates have data input</li>
         {% endfor %}
+	<li><a href="/download/alldata">All Statistics</a></li>
     </ul>
+    <p>A chart displaying data from 2014/11/18</p>
+    <div id="chart">
+
+    </div>
 </body>
 </html>

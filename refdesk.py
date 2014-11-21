@@ -7,6 +7,7 @@ import psycopg2
 import sqlite3
 import StringIO
 import csv
+import json
 
 # Database connection info
 DB_NAME = 'refstats'
@@ -103,48 +104,74 @@ def get_stats():
 
 def get_csv(filename):
     "Get the data in CSV format"
-    #filename = flask.request.args.get('filename', '')
     try:
         data = get_db()
         cur = data.cursor()
-	#filename = '2014-09-08'
-	#print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
-	cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
-	#cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate='2014-09-08'")
-	csvgen = StringIO.StringIO()
-	csvfile = csv.writer(csvgen)
-	for row in cur.fetchall():
-		#wstr = str(row[0]),str(row[1]),str(row[2])
-		csvfile.writerow([row[0], row[1], row[2]]) 
-	csv_result = csvgen.getvalue()
-	csvgen.close()
-	#csv = "column1, column2, column3"
+	    #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
+        if str(filename) == "alldata":
+	        cur.execute("SELECT refdate, refstat, refcount FROM refstats")
+        else:
+	        cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
+        csvgen = StringIO.StringIO()
+        csvfile = csv.writer(csvgen)
+        for row in cur.fetchall():
+            #wstr = str(row[0]),str(row[1]),str(row[2])
+            csvfile.writerow([row[0], row[1], row[2]]) 
+        csv_result = csvgen.getvalue()
+	    # an attempt at making JSON avilable...have no idea what I'm doing
+	    #json_results = json.dumps(csvgen)
+        csvgen.close()
         data.commit()
         data.close()
         return csv_result
     except Exception, e:
         print(e)
 
+def get_dataArray(filename):
+    "Put the data into an array/JSON for Google charts"
+    try:
+        data = get_db()
+        cur = data.cursor()
+        cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
+        dataArray = []
+        for row in cur.fetchall():
+            dataArray.append({"c":[{"v":row[1]},{"v":int(row[2])}]})
+        #resj = json.dumps(dataArray)
+        data.commit()
+        data.close()
+        return dataArray
+    except Exception, e:
+        print(e)
+
+def get_missing():
+    "Find the dates that are missing stats"
+    try:
+        print("Hello")
+    except Exception, e:
+	    print(e)
+
 @app.route('/showRefdesk-stats', methods=['GET'])
 def show_stats():
     "Lets try to get all dates with data input"
     try:
         dates = get_stats()
-        return render_template('show_stats.html', dates=dates)
+	    #missing = get_missing()
+        array = get_dataArray('2014-11-18')
+        print(array)
+        return render_template('show_stats.html', dates=dates, array=array)
     except:
         return abort(500)
 
 @app.route('/download/<filename>')
 def download_file(filename):
     try:
-	filename = str(filename)
-        #filename = flask.request.args.get('filename', '')
-	print(filename)
+        filename = str(filename)
         csv = get_csv(filename)
-	print(csv)
         response = make_response(csv)
-        response_header = "attachment; fname=" + filename + ".csv"
-	response.headers["Content-Type"] = 'text/csv'
+        csv_file = filename + ".csv"
+        print(csv_file)
+        response_header = "attachment; fname=" + csv_file
+        response.headers["Content-Type"] = 'text/csv'
         response.headers["Content-Disposition"] = response_header
         return response
     except:
