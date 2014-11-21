@@ -133,15 +133,59 @@ def get_dataArray(filename):
         data = get_db()
         cur = data.cursor()
         cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
-        dataArray = []
+        timecodes = {
+            "8to10": 1,
+            "10to11": 2,
+            "11to12": 3,
+            "12to1": 4,
+            "1to2": 5,
+            "2to3": 6,
+            "3to4": 7,
+            "4to5": 8,
+            "5to6": 9,
+            "6to7": 10,
+            "7toclose": 11
+        }
+        stack = ["['8-10AM','10-11AM','11AM-12PM','12-1PM','1-2PM', \
+                  '2-3PM','3-4PM','4-5PM','5-6PM','6-7PM','7PM-Close', \
+                  { role: 'annotation' } ],"]
+
+        directional = ["'Directional',", None, None, None, None, None, None, None, None, None, None, None]
+        coll_serv = ["'Help with Collections/Services',", None, None, None, None, None, None, None, None, None, None, None]
+        referral = ["'Referral to Librarian',", None, None, None, None, None, None, None, None, None, None, None]
+        equip = ["'Equipment',", None, None, None, None, None, None, None, None, None, None, None]
+        prin_soft = ["'Help with Printers/Software',", None, None, None, None, None, None, None, None, None, None, None]
+
         for row in cur.fetchall():
-            dataArray.append({"c":[{"v":row[1]},{"v":int(row[2])}]})
-        #resj = json.dumps(dataArray)
+            timeslot, stat = parse_stat(row[1])
+            print stat, timeslot
+            if stat == 'dir':
+                directional[timecodes[timeslot]] = row[2]
+            elif stat == 'equipment':
+                equip[timecodes[timeslot]] = row[2]
+            elif stat == 'help':
+                coll_serv[timecodes[timeslot]] = row[2]
+            elif stat == 'ithelp':
+                prin_soft[timecodes[timeslot]] = row[2]
+            elif stat == 'referral':
+                referral[timecodes[timeslot]] = row[2]
+            
         data.commit()
         data.close()
-        return dataArray
+        for stat_type in [directional, coll_serv, referral, equip, prin_soft]:
+            stack.append(stat_type)
+
+        return stack
     except Exception, e:
         print(e)
+
+def parse_stat(stat):
+    "Returns the type of stat and the time slot"
+    
+    for s in ['dir', 'equipment', 'ithelp', 'referral', 'help']:
+        pos = stat.find(s) 
+        if pos > -1:
+            return stat[0:pos], s
 
 def get_missing():
     "Find the dates that are missing stats"
