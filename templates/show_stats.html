@@ -22,8 +22,9 @@
             //set some basic options for the chart
             var options = {
                 title: "Data for November 18, 2014",
-                legend: 'none'
-                //isStacked: true
+                legend: { position: 'top', maxLines: 3 },
+                bar: { groupWidth: '20%' },
+                isStacked: true
             };
 
             //bind the chart to the div

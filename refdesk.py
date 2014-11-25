@@ -146,9 +146,7 @@ def get_dataArray(filename):
             "6to7": 10,
             "7toclose": 11
         }
-        stack = ["['8-10AM','10-11AM','11AM-12PM','12-1PM','1-2PM', \
-                  '2-3PM','3-4PM','4-5PM','5-6PM','6-7PM','7PM-Close', \
-                  { role: 'annotation' } ],"]
+        stack = [['8-10AM','10-11AM','11AM-12PM','12-1PM','1-2PM','2-3PM','3-4PM','4-5PM','5-6PM','6-7PM','7PM-Close',{ 'role': 'annotation' } ]]
 
         directional = ["'Directional',", None, None, None, None, None, None, None, None, None, None, None]
         coll_serv = ["'Help with Collections/Services',", None, None, None, None, None, None, None, None, None, None, None]
