@@ -146,13 +146,13 @@ def get_dataArray(filename):
             "6to7": 10,
             "7toclose": 11
         }
-        stack = [['8-10AM','10-11AM','11AM-12PM','12-1PM','1-2PM','2-3PM','3-4PM','4-5PM','5-6PM','6-7PM','7PM-Close',{ 'role': 'annotation' } ]]
+        stack = [['Timeslot', '8-10AM', '10-11AM', '11AM-12PM', '12-1PM', '1-2PM', '2-3PM', '3-4PM', '4-5PM', '5-6PM', '6-7PM', '7PM-Close', { 'role': 'annotation' } ]]
 
-        directional = ["'Directional',", None, None, None, None, None, None, None, None, None, None, None]
-        coll_serv = ["'Help with Collections/Services',", None, None, None, None, None, None, None, None, None, None, None]
-        referral = ["'Referral to Librarian',", None, None, None, None, None, None, None, None, None, None, None]
-        equip = ["'Equipment',", None, None, None, None, None, None, None, None, None, None, None]
-        prin_soft = ["'Help with Printers/Software',", None, None, None, None, None, None, None, None, None, None, None]
+        directional = ["Directional", None, None, None, None, None, None, None, None, None, None, None, '']
+        coll_serv = ["Help with Collections/Services", None, None, None, None, None, None, None, None, None, None, None, '']
+        referral = ["Referral to Librarian", None, None, None, None, None, None, None, None, None, None, None, '']
+        equip = ["Equipment", None, None, None, None, None, None, None, None, None, None, None, '']
+        prin_soft = ["Help with Printers/Software", None, None, None, None, None, None, None, None, None, None, None, '']
 
         for row in cur.fetchall():
             timeslot, stat = parse_stat(row[1])
@@ -172,6 +172,66 @@ def get_dataArray(filename):
         data.close()
         for stat_type in [directional, coll_serv, referral, equip, prin_soft]:
             stack.append(stat_type)
+
+        return stack
+    except Exception, e:
+        print(e)
+
+def get_timeArray(filename): 
+    "Put the data into an array/JSON for Google charts"
+    try:
+        data = get_db()
+        cur = data.cursor()
+        cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
+        helpcodes = {
+            "dir": 1,
+            "equipment": 2,
+            "help": 3,
+            "ithelp": 4,
+            "referral": 5
+        }
+        stack = [['Refstat', 'Directional','Equipment','Help with Collections/Services','Help with Printers/Software','Referral to Librarian',{ 'role': 'annotation' } ]]
+        time1 = ["8-10AM", None, None, None, None, None, '']
+        time2 = ["10-11AM", None, None, None, None, None, '']
+        time3 = ["11AM-12PM", None, None, None, None, None, '']
+        time4 = ["12-1PM", None, None, None, None, None, '']
+        time5 = ["1-2PM", None, None, None, None, None, '']
+        time6 = ["2-3PM", None, None, None, None, None, '']
+        time7 = ["3-4PM", None, None, None, None, None, '']
+        time8 = ["4-5PM", None, None, None, None, None, '']
+        time9 = ["5-6PM", None, None, None, None, None, '']
+        time10 = ["6-7PM", None, None, None, None, None, '']
+        time11 = ["7-Close", None, None, None, None, None, '']
+        
+        for row in cur.fetchall():
+            timeslot, stat = parse_stat(row[1])
+            if timeslot == '8to10':
+                time1[helpcodes[stat]] = row[2]
+            elif timeslot == '10to11':
+                time2[helpcodes[stat]] = row[2]
+            elif timeslot == '11to12':
+                time3[helpcodes[stat]] = row[2]
+            elif timeslot == '12to1':
+                time4[helpcodes[stat]] = row[2]
+            elif timeslot == '1to2':
+                time5[helpcodes[stat]] = row[2]
+            elif timeslot == '2to3':
+                time6[helpcodes[stat]] = row[2]
+            elif timeslot == '3to4':
+                time7[helpcodes[stat]] = row[2]
+            elif timeslot == '4to5':
+                time8[helpcodes[stat]] = row[2]
+            elif timeslot == '5to6':
+                time9[helpcodes[stat]] = row[2]
+            elif timeslot == '6to7':
+                time10[helpcodes[stat]] = row[2]
+            elif timeslot == '7toclose':
+                time11[helpcodes[stat]] = row[2]
+        
+        data.commit()
+        data.close()
+        for time in [time1, time2, time3, time4, time5, time6, time7, time8, time9, time10, time11]:
+            stack.append(time)
 
         return stack
     except Exception, e:
@@ -200,7 +260,8 @@ def show_stats():
 	    #missing = get_missing()
         array = get_dataArray('2014-11-18')
         print(array)
-        return render_template('show_stats.html', dates=dates, array=array)
+        tarray = get_timeArray('2014-11-18')
+        return render_template('show_stats.html', dates=dates, array=array, tarray=tarray)
     except:
         return abort(500)
 
@@ -211,7 +272,6 @@ def download_file(filename):
         csv = get_csv(filename)
         response = make_response(csv)
         csv_file = filename + ".csv"
-        print(csv_file)
         response_header = "attachment; fname=" + csv_file
         response.headers["Content-Type"] = 'text/csv'
         response.headers["Content-Disposition"] = response_header

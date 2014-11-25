@@ -23,13 +23,27 @@
             var options = {
                 title: "Data for November 18, 2014",
                 legend: { position: 'top', maxLines: 3 },
-                bar: { groupWidth: '20%' },
+                height: 500,
+                width: 600,
                 isStacked: true
             };
-
             //bind the chart to the div
             var chart = new google.visualization.BarChart(document.getElementById('chart'));
             chart.draw(data, options);
+
+            //Data Table for another stacked barchart
+            var data2 = new google.visualization.arrayToDataTable({{tarray|tojson|safe}})
+            //set some basic options
+            var options2 = {
+                title: "Timeslots for November 18, 2014",
+                legend: { position: 'top', maxLines:3 },
+                height: 500,
+                width: 600,
+                isStacked: true
+            };
+            //bind the chart to the div
+            var chart2 = new google.visualization.BarChart(document.getElementById('chart2'));
+            chart2.draw(data2, options2);
         }
     </script>
 </head>
@@ -53,6 +67,9 @@
     </ul>
     <p>A chart displaying data from 2014/11/18</p>
     <div id="chart">
+
+    </div>
+    <div id="chart2">
 
     </div>
 </body>
