@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title>Show Research Help Stats</title>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <!--<script src="https://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="jquery.csv-0.71.js"></script>-->
+    <script type="text/javascript">
+        //load the visualization library from Google and set a listener
+	    google.load("visualization", "1", {packages:["corechart"]});
+	    google.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            //Create the data table
+            //var data = new google.visualization.DataTable({
+            //     "cols": [ {"label":"refstat","type":"string"},
+            //               {"label":"refcount","type":"number"}],
+            //     "rows": {{array|tojson|safe}}
+            //});
+            //Data Table for stacked barchart
+            var data = new google.visualization.arrayToDataTable({{array|tojson|safe}})
+            //set some basic options for the chart
+            var options = {
+                title: "Data for November 18, 2014",
+                legend: { position: 'top', maxLines: 3 },
+                height: 500,
+                width: 600,
+                isStacked: true
+            };
+            //bind the chart to the div
+            var chart = new google.visualization.BarChart(document.getElementById('chart'));
+            chart.draw(data, options);
+
+            //Data Table for another stacked barchart
+            var data2 = new google.visualization.arrayToDataTable({{tarray|tojson|safe}})
+            //set some basic options
+            var options2 = {
+                title: "Timeslots for November 18, 2014",
+                legend: { position: 'top', maxLines:3 },
+                height: 500,
+                width: 600,
+                isStacked: true
+            };
+            //bind the chart to the div
+            var chart2 = new google.visualization.BarChart(document.getElementById('chart2'));
+            chart2.draw(data2, options2);
+        }
+    </script>
+</head>
+<body>
+    <h1>Ref Desk Statistics</h1>
+    <div id="menu">
+        <ul>
+            <li><a href="/refdesk-stats">Enter Statistics</a></li>
+            <li><a href="/refstats">View Statistics</a></li>
+        </ul>
+        <hr>
+    </div>
+    <p>Listed below are all the days that have statistics entered</p>
+    <ul>
+        {% for date in dates %}
+        <li><a href="{{ date.refdate }}">{{ date.refdate }}</a></li>
+        {% else %}
+        <li>Unpossible, no dates have data input</li>
+        {% endfor %}
+	<li><a href="/download/alldata">All Statistics</a>(Download Only)</li>
+    </ul>
+    <div id="chart">
+
+    </div>
+    <div id="chart2">
+
+    </div>
+    <a href="/download/{{date}}">Download this data</a>
+</body>
+</html>

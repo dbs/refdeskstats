@@ -252,16 +252,19 @@ def get_missing():
     except Exception, e:
 	    print(e)
 
-@app.route('/showRefdesk-stats', methods=['GET'])
-def show_stats():
+@app.route('/showRefdesk-stats/', methods=['GET'])
+@app.route('/showRefdesk-stats/<date>', methods=['GET'])
+def show_stats(date=None):
     "Lets try to get all dates with data input"
     try:
-        dates = get_stats()
-	    #missing = get_missing()
-        array = get_dataArray('2014-11-18')
-        print(array)
-        tarray = get_timeArray('2014-11-18')
-        return render_template('show_stats.html', dates=dates, array=array, tarray=tarray)
+        if date:
+            array = get_dataArray(date)
+            tarray = get_timeArray(date)
+            dates = get_stats()
+            return render_template('show_chart.html', dates=dates, array=array, tarray=tarray,date=date)
+        else:
+            dates = get_stats()
+            return render_template('show_stats.html', dates=dates)
     except:
         return abort(500)
 
