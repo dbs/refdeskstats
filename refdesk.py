@@ -9,7 +9,8 @@ import psycopg2
 import StringIO
 import csv
 
-URL_BASE = '/refdesk-stats'
+#URL_BASE = '/refdesk-stats/'
+URL_BASE = '/'
 
 # Database connection info
 DB_NAME = 'refstats'
@@ -251,8 +252,8 @@ def get_missing():
     except Exception, e:
         print(e)
 
-@app.route(URL_BASE + '/view/', methods=['GET'])
-@app.route(URL_BASE + '/view/<date>', methods=['GET'])
+@app.route(URL_BASE + 'view/', methods=['GET'])
+@app.route(URL_BASE + 'view/<date>', methods=['GET'])
 def show_stats(date=None):
     "Lets try to get all dates with data input"
     try:
@@ -267,8 +268,8 @@ def show_stats(date=None):
     except:
         return abort(500)
 
-@app.route(URL_BASE + '/download/')
-@app.route(URL_BASE + '/download/<filename>')
+@app.route(URL_BASE + 'download/')
+@app.route(URL_BASE + 'download/<filename>')
 def download_file(filename=None):
     "Downloads a file in CSV format"
     try:
