@@ -48,6 +48,16 @@
         </ul>
         <hr>
     </div>
+    <!-- The div for the data chart -->
+    <div id="chart">
+
+    </div>
+    <!-- The div for the timeslot chart -->
+    <div id="chart2">
+
+    </div>
+    <p><a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a></p>
+
     <p>Listed below are all the days that have statistics entered</p>
     <ul>
         {% for date in dates %}
@@ -57,14 +67,5 @@
         {% endfor %}
 	<li><a href="/refdesk-stats/download">All Statistics</a>(Download Only)</li>
     </ul>
-    <!-- The div for the data chart -->
-    <div id="chart">
-
-    </div>
-    <!-- The div for the timeslot chart -->
-    <div id="chart2">
-
-    </div>
-    <a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a>
-</body>
+  </body>
 </html>
