@@ -1,21 +1,20 @@
-"Collect daily reference desk statistics in a database"
-"Display the stats in a useful way with charts and download links"
+"""Collect daily reference desk statistics in a database
+
+Display the stats in a useful way with charts and download links"""
 
 from flask import Flask, abort, request, render_template, Response, make_response
 from os.path import abspath, dirname
 import datetime
 import psycopg2
-import sqlite3
 import StringIO
 import csv
-import json
 
 URL_BASE = '/refdesk-stats'
 
 # Database connection info
 DB_NAME = 'refstats'
 #DB_HOST = 'localhost'
-#DB_USER = 'refstats'
+DB_USER = 'refstats'
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
@@ -42,7 +41,8 @@ def get_db():
     """
     try:
         return psycopg2.connect(
-            database=DB_NAME
+            database=DB_NAME,
+            user=DB_USER
         )
     except Exception, e:
         print(e)
@@ -109,18 +109,16 @@ def get_csv(filename):
     try:
         data = get_db()
         cur = data.cursor()
-	    #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
+        #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
         if str(filename) == 'alldata':
-	        cur.execute("SELECT refdate, refstat, refcount FROM refstats")
+            cur.execute("SELECT refdate, refstat, refcount FROM refstats")
         else:
-	        cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
+            cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
         csvgen = StringIO.StringIO()
         csvfile = csv.writer(csvgen)
         for row in cur.fetchall():
-            csvfile.writerow([row[0], row[1], row[2]]) 
+            csvfile.writerow([row[0], row[1], row[2]])
         csv_result = csvgen.getvalue()
-	    # This will make JSON available is uncommented
-	    #json_results = json.dumps(csvgen)
         csvgen.close()
         data.commit()
         data.close()
@@ -147,7 +145,7 @@ def get_dataArray(filename):
             "6to7": 10,
             "7toclose": 11
         }
-        stack = [['Timeslot', '8-10AM', '10-11AM', '11AM-12PM', '12-1PM', '1-2PM', '2-3PM', '3-4PM', '4-5PM', '5-6PM', '6-7PM', '7PM-Close', { 'role': 'annotation' } ]]
+        stack = [['Timeslot', '8-10AM', '10-11AM', '11AM-12PM', '12-1PM', '1-2PM', '2-3PM', '3-4PM', '4-5PM', '5-6PM', '6-7PM', '7PM-Close', {'role': 'annotation'}]]
 
         directional = ["Directional", None, None, None, None, None, None, None, None, None, None, None, '']
         coll_serv = ["Help with Collections/Services", None, None, None, None, None, None, None, None, None, None, None, '']
@@ -168,7 +166,7 @@ def get_dataArray(filename):
                 prin_soft[timecodes[timeslot]] = row[2]
             elif stat == 'referral':
                 referral[timecodes[timeslot]] = row[2]
-            
+
         data.commit()
         data.close()
         for stat_type in [directional, coll_serv, referral, equip, prin_soft]:
@@ -178,7 +176,7 @@ def get_dataArray(filename):
     except Exception, e:
         print(e)
 
-def get_timeArray(filename): 
+def get_timeArray(filename):
     "Put the data into an array for Google charts"
     try:
         data = get_db()
@@ -191,7 +189,7 @@ def get_timeArray(filename):
             "ithelp": 4,
             "referral": 5
         }
-        stack = [['Refstat', 'Directional','Equipment','Help with Collections/Services','Help with Printers/Software','Referral to Librarian',{ 'role': 'annotation' } ]]
+        stack = [['Refstat', 'Directional', 'Equipment', 'Help with Collections/Services', 'Help with Printers/Software', 'Referral to Librarian', {'role': 'annotation'}]]
         time1 = ["8-10AM", None, None, None, None, None, '']
         time2 = ["10-11AM", None, None, None, None, None, '']
         time3 = ["11AM-12PM", None, None, None, None, None, '']
@@ -203,7 +201,7 @@ def get_timeArray(filename):
         time9 = ["5-6PM", None, None, None, None, None, '']
         time10 = ["6-7PM", None, None, None, None, None, '']
         time11 = ["7-Close", None, None, None, None, None, '']
-        
+
         for row in cur.fetchall():
             timeslot, stat = parse_stat(row[1])
             if timeslot == '8to10':
@@ -228,7 +226,7 @@ def get_timeArray(filename):
                 time10[helpcodes[stat]] = row[2]
             elif timeslot == '7toclose':
                 time11[helpcodes[stat]] = row[2]
-        
+
         data.commit()
         data.close()
         for time in [time1, time2, time3, time4, time5, time6, time7, time8, time9, time10, time11]:
@@ -240,9 +238,9 @@ def get_timeArray(filename):
 
 def parse_stat(stat):
     "Returns the type of stat and the time slot"
-    
+
     for s in ['dir', 'equipment', 'ithelp', 'referral', 'help']:
-        pos = stat.find(s) 
+        pos = stat.find(s)
         if pos > -1:
             return stat[0:pos], s
 
@@ -251,7 +249,7 @@ def get_missing():
     try:
         print("Hello")
     except Exception, e:
-	    print(e)
+        print(e)
 
 @app.route(URL_BASE + '/view/', methods=['GET'])
 @app.route(URL_BASE + '/view/<date>', methods=['GET'])
@@ -262,15 +260,17 @@ def show_stats(date=None):
             array = get_dataArray(date)
             tarray = get_timeArray(date)
             dates = get_stats()
-            return render_template('show_chart.html', dates=dates, array=array, tarray=tarray,date=date)
+            return render_template('show_chart.html', dates=dates, array=array, tarray=tarray, date=date)
         else:
             dates = get_stats()
             return render_template('show_stats.html', dates=dates)
     except:
         return abort(500)
+
 @app.route(URL_BASE + '/download/')
 @app.route(URL_BASE + '/download/<filename>')
 def download_file(filename=None):
+    "Downloads a file in CSV format"
     try:
         if filename:
             filename = str(filename)
@@ -288,4 +288,4 @@ def download_file(filename=None):
         return abort(500)
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=6666)
+    app.run(debug=True, host="0.0.0.0", port=5555)
