@@ -1,4 +1,5 @@
 "Collect daily reference desk statistics in a database"
+"Display the stats in a useful way with charts and download links"
 
 from flask import Flask, abort, request, render_template, Response, make_response
 from os.path import abspath, dirname
@@ -8,6 +9,8 @@ import sqlite3
 import StringIO
 import csv
 import json
+
+URL_BASE = '/refdesk-stats'
 
 # Database connection info
 DB_NAME = 'refstats'
@@ -44,7 +47,7 @@ def get_db():
     except Exception, e:
         print(e)
 
-@app.route('/refdesk-stats', methods=['GET', 'POST'])
+@app.route(URL_BASE, methods=['GET', 'POST'])
 def submit():
     "Either show the form, or process the form"
     if request.method == 'POST':
@@ -93,7 +96,6 @@ def get_stats():
         cur = dbase.cursor()
         cur.execute('SELECT DISTINCT refdate FROM refstats ORDER BY refdate desc')
         dates = [dict(refdate=row[0]) for row in cur.fetchall()]
-        # dates = ('2004-10-01', '2014-10-31')
         if dbase.closed:
             return "I was closed!"
         dbase.commit()
@@ -108,17 +110,16 @@ def get_csv(filename):
         data = get_db()
         cur = data.cursor()
 	    #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
-        if str(filename) == "alldata":
+        if str(filename) == 'alldata':
 	        cur.execute("SELECT refdate, refstat, refcount FROM refstats")
         else:
 	        cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
         csvgen = StringIO.StringIO()
         csvfile = csv.writer(csvgen)
         for row in cur.fetchall():
-            #wstr = str(row[0]),str(row[1]),str(row[2])
             csvfile.writerow([row[0], row[1], row[2]]) 
         csv_result = csvgen.getvalue()
-	    # an attempt at making JSON avilable...have no idea what I'm doing
+	    # This will make JSON available is uncommented
 	    #json_results = json.dumps(csvgen)
         csvgen.close()
         data.commit()
@@ -128,7 +129,7 @@ def get_csv(filename):
         print(e)
 
 def get_dataArray(filename):
-    "Put the data into an array/JSON for Google charts"
+    "Put the data into an array for Google charts"
     try:
         data = get_db()
         cur = data.cursor()
@@ -156,7 +157,7 @@ def get_dataArray(filename):
 
         for row in cur.fetchall():
             timeslot, stat = parse_stat(row[1])
-            print stat, timeslot
+            #print stat, timeslot
             if stat == 'dir':
                 directional[timecodes[timeslot]] = row[2]
             elif stat == 'equipment':
@@ -178,7 +179,7 @@ def get_dataArray(filename):
         print(e)
 
 def get_timeArray(filename): 
-    "Put the data into an array/JSON for Google charts"
+    "Put the data into an array for Google charts"
     try:
         data = get_db()
         cur = data.cursor()
@@ -252,8 +253,8 @@ def get_missing():
     except Exception, e:
 	    print(e)
 
-@app.route('/showRefdesk-stats/', methods=['GET'])
-@app.route('/showRefdesk-stats/<date>', methods=['GET'])
+@app.route(URL_BASE + '/view/', methods=['GET'])
+@app.route(URL_BASE + '/view/<date>', methods=['GET'])
 def show_stats(date=None):
     "Lets try to get all dates with data input"
     try:
@@ -267,14 +268,18 @@ def show_stats(date=None):
             return render_template('show_stats.html', dates=dates)
     except:
         return abort(500)
-
-@app.route('/download/<filename>')
-def download_file(filename):
+@app.route(URL_BASE + '/download/')
+@app.route(URL_BASE + '/download/<filename>')
+def download_file(filename=None):
     try:
-        filename = str(filename)
-        csv = get_csv(filename)
+        if filename:
+            filename = str(filename)
+            csv = get_csv(filename)
+            csv_file = filename + ".csv"
+        else:
+            csv = get_csv('alldata')
+            csv_file = "alldata.csv"
         response = make_response(csv)
-        csv_file = filename + ".csv"
         response_header = "attachment; fname=" + csv_file
         response.headers["Content-Type"] = 'text/csv'
         response.headers["Content-Disposition"] = response_header
