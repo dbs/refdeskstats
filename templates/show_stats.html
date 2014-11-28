@@ -12,6 +12,15 @@
         </ul>
         <hr>
     </div>
+    <p>Listed below are all the months that have statistics entered</p>
+    <ul>
+        {% for month in months %}
+        <li><a href="{{ month.month }}">{{ month.month }}</a></li>
+        {% else %}
+        <li>Crazy, no months have data</li>
+        {% endfor %}
+    </ul>
+
     <p>Listed below are all the days that have statistics entered</p>
     <ul>
         {% for date in dates %}

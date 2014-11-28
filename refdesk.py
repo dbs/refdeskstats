@@ -32,6 +32,18 @@ app.root_path = abspath(dirname(__file__))
 # Table permissions
 # GRANT SELECT, INSERT, UPDATE, DELETE ON refstats TO refstats;
 
+# View definition
+# CREATE VIEW refview AS WITH x AS (
+#    SELECT refstat, refdate, MAX(create_time)
+#    AS create_time FROM refstats
+#    GROUP BY refstat, refdate)
+#    SELECT x.refstat, x.refdate, x.create_time, r.refcount
+#    FROM refstats r INNER JOIN x ON (
+#       x.create_time = r.create_time AND
+#       x.refstat = r.refstat AND
+#       x.refdate = r.refdate)
+#    ORDER BY refstat;
+
 def get_db():
     """
     Get a database connection
@@ -95,13 +107,31 @@ def get_stats():
     try:
         dbase = get_db()
         cur = dbase.cursor()
-        cur.execute('SELECT DISTINCT refdate FROM refstats ORDER BY refdate desc')
+        cur.execute('SELECT DISTINCT refdate FROM refview ORDER BY refdate desc')
         dates = [dict(refdate=row[0]) for row in cur.fetchall()]
         if dbase.closed:
             return "I was closed!"
         dbase.commit()
         dbase.close()
         return dates
+    except Exception, e:
+        print(e)
+
+def get_months():
+    "Get the months that have data"
+    try:
+        dbase = get_db()
+        cur = dbase.cursor()
+        cur.execute("SELECT DISTINCT date_part('year',refdate)|| '-' ||date_part('month',refdate) AS date_piece, (date_part('year',refdate)|| '-' ||date_part('month',refdate)|| '-01')::date AS date FROM refview GROUP BY date_piece ORDER BY date asc")
+        months = []
+        for row in cur.fetchall():
+            year, month = parse_date(row[1])
+            months.append({'month': year + '-' + month})
+        #months = [dict(month=row[0]) for row in cur.fetchall()]
+        dbase.commit()
+        dbase.close()
+        # print(months)
+        return months
     except Exception, e:
         print(e)
 
@@ -112,9 +142,9 @@ def get_csv(filename):
         cur = data.cursor()
         #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
         if str(filename) == 'alldata':
-            cur.execute("SELECT refdate, refstat, refcount FROM refstats")
+            cur.execute("SELECT refdate, refstat, refcount FROM refview")
         else:
-            cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
+            cur.execute("SELECT refdate, refstat, refcount FROM refview WHERE refdate=%s", (str(filename),))
         csvgen = StringIO.StringIO()
         csvfile = csv.writer(csvgen)
         for row in cur.fetchall():
@@ -127,12 +157,12 @@ def get_csv(filename):
     except Exception, e:
         print(e)
 
-def get_dataArray(filename):
+def get_dataArray(date):
     "Put the data into an array for Google charts"
     try:
         data = get_db()
         cur = data.cursor()
-        cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
+        cur.execute("SELECT refdate, refstat, refcount FROM refview WHERE refdate=%s", (str(date),))
         timecodes = {
             "8to10": 1,
             "10to11": 2,
@@ -177,12 +207,19 @@ def get_dataArray(filename):
     except Exception, e:
         print(e)
 
-def get_timeArray(filename):
+def get_timeArray(date):
     "Put the data into an array for Google charts"
     try:
         data = get_db()
         cur = data.cursor()
-        cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(filename),))
+        #cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(date),))
+        "If we want everyday in the month"
+        if len(str(date)) == 7:
+            date_year, date_month = parse_date(str(date))
+            cur.execute("SELECT refstat, sum(refcount) FROM refview WHERE date_part('year',refdate) = %s AND date_part('month',refdate) = %s GROUP BY refstat", (str(date_year), str(date_month)))
+        else:
+            cur.execute("SELECT refstat, refcount, refdate FROM refview WHERE refdate=%s", (str(date),))
+
         helpcodes = {
             "dir": 1,
             "equipment": 2,
@@ -204,38 +241,48 @@ def get_timeArray(filename):
         time11 = ["7-Close", None, None, None, None, None, '']
 
         for row in cur.fetchall():
-            timeslot, stat = parse_stat(row[1])
+            timeslot, stat = parse_stat(row[0])
+            #print(timeslot, stat, row[1])
+            #print(helpcodes[stat])
             if timeslot == '8to10':
-                time1[helpcodes[stat]] = row[2]
+                time1[helpcodes[stat]] = row[1]
             elif timeslot == '10to11':
-                time2[helpcodes[stat]] = row[2]
+                time2[helpcodes[stat]] = row[1]
+                #print(time2)
             elif timeslot == '11to12':
-                time3[helpcodes[stat]] = row[2]
+                time3[helpcodes[stat]] = row[1]
             elif timeslot == '12to1':
-                time4[helpcodes[stat]] = row[2]
+                time4[helpcodes[stat]] = row[1]
             elif timeslot == '1to2':
-                time5[helpcodes[stat]] = row[2]
+                time5[helpcodes[stat]] = row[1]
             elif timeslot == '2to3':
-                time6[helpcodes[stat]] = row[2]
+                time6[helpcodes[stat]] = row[1]
             elif timeslot == '3to4':
-                time7[helpcodes[stat]] = row[2]
+                time7[helpcodes[stat]] = row[1]
             elif timeslot == '4to5':
-                time8[helpcodes[stat]] = row[2]
+                time8[helpcodes[stat]] = row[1]
             elif timeslot == '5to6':
-                time9[helpcodes[stat]] = row[2]
+                time9[helpcodes[stat]] = row[1]
             elif timeslot == '6to7':
-                time10[helpcodes[stat]] = row[2]
+                time10[helpcodes[stat]] = row[1]
             elif timeslot == '7toclose':
-                time11[helpcodes[stat]] = row[2]
+                time11[helpcodes[stat]] = row[1]
 
         data.commit()
         data.close()
         for time in [time1, time2, time3, time4, time5, time6, time7, time8, time9, time10, time11]:
             stack.append(time)
-
+            #print(time)
+        #print(stack)
         return stack
     except Exception, e:
         print(e)
+
+def parse_date(date):
+    "Returns the year and the month separately from the date"
+
+    date_parts = str(date).split('-')
+    return date_parts[0], date_parts[1]
 
 def parse_stat(stat):
     "Returns the type of stat and the time slot"
@@ -258,13 +305,21 @@ def show_stats(date=None):
     "Lets try to get all dates with data input"
     try:
         if date:
-            array = get_dataArray(date)
-            tarray = get_timeArray(date)
-            dates = get_stats()
-            return render_template('show_chart.html', dates=dates, array=array, tarray=tarray, date=date)
+            if len(str(date)) == 7:
+                tarray = get_timeArray(date)
+                dates = get_stats()
+                months = get_months()
+                return render_template('show_mchart.html', dates=dates, tarray=tarray,date=date, months=months)
+            else:
+                array = get_dataArray(date)
+                tarray = get_timeArray(date)
+                dates = get_stats()
+                months = get_months()
+                return render_template('show_chart.html', dates=dates, array=array, tarray=tarray,date=date, months=months)
         else:
             dates = get_stats()
-            return render_template('show_stats.html', dates=dates)
+            months = get_months()
+            return render_template('show_stats.html', dates=dates, months=months)
     except:
         return abort(500)
 
