@@ -36,6 +36,22 @@
             //bind the chart to the div
             var chart2 = new google.visualization.BarChart(document.getElementById('chart2'));
             chart2.draw(data2, options2);
+
+            //Data Table for week day stacked barchart
+            var data3 = new google.visualization.arrayToDataTable({{wdarray|tojson|safe}})
+            //set some basic options
+            var options3 = {
+                title: "Statistics by Day of the Week for {{date}}",
+                legend: { position: 'top', maxLines:3 },
+                height: 500,
+                width: 700,
+                isStacked: true
+            };
+            //bind the chart to the div
+            var chart3 = new google.visualization.BarChart(document.getElementById('chart3'));
+            chart3.draw(data3, options3);
+
+
         }
     </script>
 </head>
@@ -48,14 +64,16 @@
         </ul>
         <hr>
     </div>
-    <!-- The div for the data chart -->
-    <!--<div id="chart">
-
-    </div>-->
     <!-- The div for the timeslot chart -->
     <div id="chart2">
 
     </div>
+
+    <!-- The div for the days of the week chart -->
+    <div id="chart3">
+
+    </div>
+
     <p><a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a></p>
 
     <p>Listed below are all the months that have statistics entered</p>
