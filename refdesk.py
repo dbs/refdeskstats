@@ -372,21 +372,21 @@ def get_missing():
 def show_stats(date=None):
     "Lets try to get all dates with data input"
     try:
+        dates = get_stats()
+        months = get_months()
         if date:
+            tarray = get_timeArray(date)
             if len(str(date)) == 7:
-                tarray = get_timeArray(date)
-                dates = get_stats()
-                months = get_months()
-                return render_template('show_mchart.html', dates=dates, tarray=tarray,date=date, months=months)
+                wdarray = get_weekdayArray(date)
+                return render_template('show_mchart.html', dates=dates, \
+                    tarray=tarray, date=date, wdarray=wdarray, months=months \
+                )
             else:
                 array = get_dataArray(date)
-                tarray = get_timeArray(date)
-                dates = get_stats()
-                months = get_months()
-                return render_template('show_chart.html', dates=dates, array=array, tarray=tarray,date=date, months=months)
+                return render_template('show_chart.html', dates=dates, \
+                    array=array, tarray=tarray, date=date, months=months \
+                )
         else:
-            dates = get_stats()
-            months = get_months()
             return render_template('show_stats.html', dates=dates, months=months)
     except:
         return abort(500)
@@ -398,12 +398,12 @@ def download_file(filename=None):
     try:
         if filename:
             filename = str(filename)
-            csv = get_csv(filename)
+            csv_data = get_csv(filename)
             csv_file = filename + ".csv"
         else:
-            csv = get_csv('alldata')
+            csv_data = get_csv('alldata')
             csv_file = "alldata.csv"
-        response = make_response(csv)
+        response = make_response(csv_data)
         response_header = "attachment; fname=" + csv_file
         response.headers["Content-Type"] = 'text/csv'
         response.headers["Content-Disposition"] = response_header
