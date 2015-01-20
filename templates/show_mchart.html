@@ -9,21 +9,8 @@
         google.setOnLoadCallback(drawChart);
 
         function drawChart() {
-            //Data Table for stacked barchart
-            //var data = new google.visualization.arrayToDataTable({{tarray|tojson|safe}})
-            //set some basic options for the chart
-            //var options = {
-                //title: "Data for {{date}}",
-                //legend: { position: 'top', maxLines: 3 },
-                //height: 500,
-                //width: 700,
-                //isStacked: true
-            //};
-            //bind the chart to the div
-            //var chart = new google.visualization.BarChart(document.getElementById('chart'));
-            //chart.draw(data, options);
-
-            //Data Table for another stacked barchart
+            
+            //Data Table for stats over entire selected month
             var data2 = new google.visualization.arrayToDataTable({{tarray|tojson|safe}})
             //set some basic options
             var options2 = {
@@ -75,6 +62,15 @@
     </div>
 
     <p><a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a></p>
+
+    <p>Days that are missing statistics</p>
+    <ul>
+        {% for day in missing %}
+        <li>{{ day.refdate }}</li>
+        {% else %}
+        <li>Excellent, no days are missing data!</li>
+        {% endfor %}
+    </ul>
 
     <p>Listed below are all the months that have statistics entered</p>
     <ul>

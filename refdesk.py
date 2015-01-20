@@ -360,10 +360,32 @@ def parse_stat(stat):
         if pos > -1:
             return stat[0:pos], s
 
-def get_missing():
+def get_missing(date):
     "Find the dates that are missing stats"
     try:
-        print("Hello")
+        data = get_db()
+        cur = data.cursor()
+        month = str(date) + '%'
+        day = str(date) + '-01'
+        cur.execute("""
+            With x AS (SELECT DISTINCT refdate from refview
+                        WHERE refdate::text LIKE %s),
+                 y AS (SELECT missingdate AS generate_series(date %s,
+                       date %s + '1 month'::interval - '1 day'::interval,
+                       '1 day'::interval) AS missingdate)
+            SELECT missingdate::date from y
+            WHERE missingdate NOT IN(
+            SELECT refdate from x)
+        """, (str(month), str(day), str(day)))
+
+        missing = []
+        for row in cur.fetchall():
+            missing.append({'refdate': row[0]})
+
+        data.commit()
+        date.close()
+
+        return missing
     except Exception, e:
         print(e)
 
@@ -378,8 +400,10 @@ def show_stats(date=None):
             tarray = get_timeArray(date)
             if len(str(date)) == 7:
                 wdarray = get_weekdayArray(date)
+                missing = get_missing(date)
                 return render_template('show_mchart.html', dates=dates, \
                     tarray=tarray, date=date, wdarray=wdarray, months=months \
+                    missing=missing \
                 )
             else:
                 array = get_dataArray(date)
