@@ -370,7 +370,7 @@ def get_missing(date):
         cur.execute("""
             With x AS (SELECT DISTINCT refdate from refview
                         WHERE refdate::text LIKE %s),
-                 y AS (SELECT missingdate AS generate_series(date %s,
+                 y AS (SELECT generate_series(date %s,
                        date %s + '1 month'::interval - '1 day'::interval,
                        '1 day'::interval) AS missingdate)
             SELECT missingdate::date from y
@@ -383,7 +383,7 @@ def get_missing(date):
             missing.append({'refdate': row[0]})
 
         data.commit()
-        date.close()
+        data.close()
 
         return missing
     except Exception, e:
@@ -402,7 +402,7 @@ def show_stats(date=None):
                 wdarray = get_weekdayArray(date)
                 missing = get_missing(date)
                 return render_template('show_mchart.html', dates=dates, \
-                    tarray=tarray, date=date, wdarray=wdarray, months=months \
+                    tarray=tarray, date=date, wdarray=wdarray, months=months, \
                     missing=missing \
                 )
             else:
