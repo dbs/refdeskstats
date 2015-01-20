@@ -113,6 +113,8 @@ def get_stats():
     try:
         dbase = get_db()
         cur = dbase.cursor()
+        #cur.execute(""" 
+            #SELECT DISTINCT refdate FROM refview WHERE refdate::text LIKE %s""")
         cur.execute('SELECT DISTINCT refdate FROM refview ORDER BY refdate desc')
         dates = [dict(refdate=row[0]) for row in cur.fetchall()]
         if dbase.closed:

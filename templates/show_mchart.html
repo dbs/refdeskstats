@@ -5,8 +5,8 @@
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
         //load the visualization library from Google and set a listener
-        google.load("visualization", "1", {packages:["corechart"]});
-        google.setOnLoadCallback(drawChart);
+	    google.load("visualization", "1", {packages:["corechart"]});
+	    google.setOnLoadCallback(drawChart);
 
         function drawChart() {
             
@@ -55,40 +55,48 @@
     <div id="chart2">
 
     </div>
-
+    
     <!-- The div for the days of the week chart -->
     <div id="chart3">
 
     </div>
 
     <p><a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a></p>
+    
+    <details>
+        <summary>Missing Statistics</summary>
+        <ul>
+            {% for day in missing %}
+            <li>{{ day.refdate }}</li>
+            {% else %}
+            <li>Excellent! No days are missing data!</i>
+            {% endfor %}
+        </ul>
+    </details>
 
-    <p>Days that are missing statistics</p>
-    <ul>
-        {% for day in missing %}
-        <li>{{ day.refdate }}</li>
-        {% else %}
-        <li>Excellent, no days are missing data!</li>
-        {% endfor %}
-    </ul>
-
-    <p>Listed below are all the months that have statistics entered</p>
-    <ul>
-        {% for month in months %}
-        <li><a href="{{ month.month }}">{{ month.month }}</a></li>
-        {% else %}
-        <li>Crazy, no months have data</li>
-        {% endfor %}
-    </ul>
-
-    <p>Listed below are all the days that have statistics entered</p>
-    <ul>
-        {% for date in dates %}
-        <li><a href="{{ date.refdate }}">{{ date.refdate }}</a></li>
-        {% else %}
-        <li>Unpossible, no dates have data input</li>
-        {% endfor %}
-        <li><a href="/refdesk-stats/download">All Statistics</a>(Download Only)</li>
-    </ul>
+    <p>Listed below are all the statistics that have been entered.</p>
+    <details>
+        <summary>Statistics broken down by month</summary>
+        <ul>
+            {% for month in months %}
+            <li><a href="{{ month.month }}">{{ month.month }}</a></li>
+            {% else %}
+            <li>Crazy, no months have data</li>
+            {% endfor %}
+        </ul>
+    </details>
+    
+    <!--<p>Listed below are all the days that have statistics entered</p>-->
+    <details>
+        <summary>All days with statistics</summary>
+        <ul>
+            {% for date in dates %}
+            <li><a href="{{ date.refdate }}">{{ date.refdate }}</a></li>
+            {% else %}
+            <li>Unpossible, no dates have data input</li>
+            {% endfor %}
+	    <li><a href="/refdesk-stats/download">All Statistics</a>(Download Only)</li>
+        </ul>
+    </details>
 </body>
 </html>
