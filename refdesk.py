@@ -429,6 +429,21 @@ def show_stats(date=None):
     except:
         return abort(500)
 
+@app.route(URL_BASE + 'edit/<date>', methods=['GET','POST'])
+def submit(date=None):
+    "Either show the form, or process the form"
+    if request.method == 'POST':
+        return eat_stat_form()
+    else:
+        return edit_data(date)
+
+def edit_data(date):
+    "Add data to missing days or edit current data"
+    try:
+        return render_template('stat_form.html', today=date)
+    except:
+        return abort(500)
+
 @app.route(URL_BASE + 'download/')
 @app.route(URL_BASE + 'download/<filename>')
 def download_file(filename=None):

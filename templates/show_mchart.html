@@ -67,7 +67,7 @@
         <summary>Missing Statistics</summary>
         <ul>
             {% for day in missing %}
-            <li>{{ day.refdate }}</li>
+            <li><a href="/refdesk-stats/edit/{{day.refdate}}">{{ day.refdate }}</a></li>
             {% else %}
             <li>Excellent! No days are missing data!</i>
             {% endfor %}
