@@ -58,16 +58,19 @@
     </div>
     <p><a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a></p>
 
-    <p>Listed below are all the months that have statistics entered</p>
-    <ul>
-        {% for month in months %}
-        <li><a href="{{ month.month }}">{{ month.month }}</a></li>
-        {% else %}
-        <li>Crazy, no months have data</li>
-        {% endfor %}
-    </ul>
+    <details>
+        <summary>Statistics broken down by month</summary>
+    <!--<p>Listed below are all the months that have statistics entered</p>-->
+        <ul>
+            {% for month in months %}
+            <li><a href="{{ month.month }}">{{ month.month }}</a></li>
+            {% else %}
+            <li>Crazy, no months have data</li>
+            {% endfor %}
+        </ul>
+    </details>
 
-    <p>Listed below are all the days that have statistics entered</p>
+    <!--<p>Listed below are all the days that have statistics entered</p>
     <ul>
         {% for date in dates %}
         <li><a href="{{ date.refdate }}">{{ date.refdate }}</a></li>
@@ -75,6 +78,6 @@
         <li>Unpossible, no dates have data input</li>
         {% endfor %}
         <li><a href="/refdesk-stats/download">All Statistics</a>(Download Only)</li>
-    </ul>
+    </ul>-->
 </body>
 </html>

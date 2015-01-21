@@ -108,14 +108,19 @@ def show_stat_form():
     "Show the pretty form for the user"
     return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()))
 
-def get_stats():
+def get_stats(date):
     "Get the stats from the database"
     try:
         dbase = get_db()
         cur = dbase.cursor()
-        #cur.execute(""" 
-            #SELECT DISTINCT refdate FROM refview WHERE refdate::text LIKE %s""")
-        cur.execute('SELECT DISTINCT refdate FROM refview ORDER BY refdate desc')
+        monthdate = str(date) + '%'
+        cur.execute(""" 
+            SELECT DISTINCT refdate
+            FROM refview
+            WHERE refdate::text LIKE %s
+            ORDER BY refdate desc""",
+        (str(monthdate),))
+        #cur.execute('SELECT DISTINCT refdate FROM refview ORDER BY refdate desc')
         dates = [dict(refdate=row[0]) for row in cur.fetchall()]
         if dbase.closed:
             return "I was closed!"
@@ -130,7 +135,12 @@ def get_months():
     try:
         dbase = get_db()
         cur = dbase.cursor()
-        cur.execute("SELECT DISTINCT date_part('year',refdate)|| '-' ||date_part('month',refdate) AS date_piece, (date_part('year',refdate)|| '-' ||date_part('month',refdate)|| '-01')::date AS date FROM refview GROUP BY date_piece ORDER BY date asc")
+        cur.execute("""SELECT DISTINCT date_part('year',refdate)|| 
+                    '-' ||date_part('month',refdate) AS date_piece,
+                    (date_part('year',refdate)|| '-' ||date_part('month',refdate)||
+                    '-01')::date AS date 
+                    FROM refview GROUP BY date_piece
+                    ORDER BY date desc""")
         months = []
         for row in cur.fetchall():
             year, month = parse_date(row[1])
@@ -236,49 +246,51 @@ def get_timeArray(date):
             "referral": 5
         }
         stack = [['Refstat', 'Directional', 'Equipment', 'Help with Collections/Services', 'Help with Printers/Software', 'Referral to Librarian', {'role': 'annotation'}]]
-        time1 = ["8-10AM", None, None, None, None, None, '']
-        time2 = ["10-11AM", None, None, None, None, None, '']
-        time3 = ["11AM-12PM", None, None, None, None, None, '']
-        time4 = ["12-1PM", None, None, None, None, None, '']
-        time5 = ["1-2PM", None, None, None, None, None, '']
-        time6 = ["2-3PM", None, None, None, None, None, '']
-        time7 = ["3-4PM", None, None, None, None, None, '']
-        time8 = ["4-5PM", None, None, None, None, None, '']
-        time9 = ["5-6PM", None, None, None, None, None, '']
-        time10 = ["6-7PM", None, None, None, None, None, '']
-        time11 = ["7-Close", None, None, None, None, None, '']
+        times = [
+            ["8-10AM", None, None, None, None, None, ''],
+            ["10-11AM", None, None, None, None, None, ''],
+            ["11AM-12PM", None, None, None, None, None, ''],
+            ["12-1PM", None, None, None, None, None, ''],
+            ["1-2PM", None, None, None, None, None, ''],
+            ["2-3PM", None, None, None, None, None, ''],
+            ["3-4PM", None, None, None, None, None, ''],
+            ["4-5PM", None, None, None, None, None, ''],
+            ["5-6PM", None, None, None, None, None, ''],
+            ["6-7PM", None, None, None, None, None, ''],
+            ["7-Close", None, None, None, None, None, '']
+        ]
 
         for row in cur.fetchall():
             timeslot, stat = parse_stat(row[0])
             #print(timeslot, stat, row[1])
             #print(helpcodes[stat])
             if timeslot == '8to10':
-                time1[helpcodes[stat]] = row[1]
+                times[0][helpcodes[stat]] = row[1]
             elif timeslot == '10to11':
-                time2[helpcodes[stat]] = row[1]
+                times[1][helpcodes[stat]] = row[1]
                 #print(time2)
             elif timeslot == '11to12':
-                time3[helpcodes[stat]] = row[1]
+                times[2][helpcodes[stat]] = row[1]
             elif timeslot == '12to1':
-                time4[helpcodes[stat]] = row[1]
+                times[3][helpcodes[stat]] = row[1]
             elif timeslot == '1to2':
-                time5[helpcodes[stat]] = row[1]
+                times[4][helpcodes[stat]] = row[1]
             elif timeslot == '2to3':
-                time6[helpcodes[stat]] = row[1]
+                times[5][helpcodes[stat]] = row[1]
             elif timeslot == '3to4':
-                time7[helpcodes[stat]] = row[1]
+                times[6][helpcodes[stat]] = row[1]
             elif timeslot == '4to5':
-                time8[helpcodes[stat]] = row[1]
+                times[7][helpcodes[stat]] = row[1]
             elif timeslot == '5to6':
-                time9[helpcodes[stat]] = row[1]
+                times[8][helpcodes[stat]] = row[1]
             elif timeslot == '6to7':
-                time10[helpcodes[stat]] = row[1]
+                times[9][helpcodes[stat]] = row[1]
             elif timeslot == '7toclose':
-                time11[helpcodes[stat]] = row[1]
+                times[10][helpcodes[stat]] = row[1]
 
         data.commit()
         data.close()
-        for time in [time1, time2, time3, time4, time5, time6, time7, time8, time9, time10, time11]:
+        for time in times:
             stack.append(time)
             #print(time)
         #print(stack)
@@ -396,7 +408,7 @@ def get_missing(date):
 def show_stats(date=None):
     "Lets try to get all dates with data input"
     try:
-        dates = get_stats()
+        dates = get_stats(date)
         months = get_months()
         if date:
             tarray = get_timeArray(date)
