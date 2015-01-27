@@ -403,6 +403,28 @@ def get_missing(date):
     except Exception, e:
         print(e)
 
+def get_current_data(date):
+    "Pull out the current data for a given day"
+    try:
+        data = get_db()
+        cur = data.cursor()
+        cur.execute("""SELECT refstat, refcount
+                    FROM refview
+                    WHERE refdate=%s""",
+        (str(date),))
+
+        stats = {}
+        for row in cur.fetchall():
+            stats[row[0]] = row[1]
+
+        data.commit()
+        data.close()
+        #print(stats)
+        return stats
+
+    except Exception, e:
+        print(e)
+
 @app.route(URL_BASE + 'view/', methods=['GET'])
 @app.route(URL_BASE + 'view/<date>', methods=['GET'])
 def show_stats(date=None):
@@ -440,7 +462,15 @@ def submit(date=None):
 def edit_data(date):
     "Add data to missing days or edit current data"
     try:
-        return render_template('stat_form.html', today=date)
+        if date:
+            stats = get_current_data(date)
+            #print(date + 'stats:' + stats)
+            if stats:
+                return render_template('edit_stat_form.html', today=date, stats=stats)
+            else:
+                return render_template('stat_form.html', today=date)
+        else:
+            return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()))
     except:
         return abort(500)
 

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Research help statistics</title>
+</head>
+<body>
+  <h1>Enter Statistics</h1>
+  <div id="menu">
+    <ul>
+      <li><a href="/refdesk-stats">Enter Statistics</a></li>
+      <li><a href="/refdesk-stats/view">View Statistics</a></li>
+    </ul>
+    <hr>
+  </div>
+  <div>
+    <form method="post">
+      Date: <input type="date" name="refdate"{% if today %} value={{ today }} {% endif %}>
+      <table>
+        <tr>
+          <th></th>
+          <th>Directional</th>
+          <th>Help with Collections or Services</th>    
+          <th>Referral to Librarian</th>
+          <th>Equipment</th>
+          <th>Help with Printers/Software</th>
+        </tr>
+        <tr>
+          <td>8 - 10 AM</td>
+          <td><input type="number" name="8to10dir" value={{stats['8to10dir']}}></td>
+          <td><input type="number" name="8to10help" value={{stats['8to10help']}}></td>
+          <td><input type="number" name="8to10referral" value={{stats['8to10referral']}}></td>
+          <td><input type="number" name="8to10equipment" value={{stats['8to10equipment']}}></td>
+          <td><input type="number" name="8to10ithelp" value={{stats['8to10ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>10 - 11 AM</td>
+          <td><input type="number" name="10to11dir" value={{stats['10to11dir']}}></td>
+          <td><input type="number" name="10to11help" value={{stats['10to11help']}}></td>
+          <td><input type="number" name="10to11referral" value={{stats['10to11referral']}}></td>
+          <td><input type="number" name="10to11equipment" value={{stats['10to11equipment']}}></td>
+          <td><input type="number" name="10to11ithelp" value={{stats['10to11ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>11 AM - 12 PM</td>
+          <td><input type="number" name="11to12dir" value={{stats['11to12dir']}}></td>
+          <td><input type="number" name="11to12help" value={{stats['11to12help']}}></td>
+          <td><input type="number" name="11to12referral" value={{stats['11to12referral']}}></td>
+          <td><input type="number" name="11to12equipment" value={{stats['11to12equipment']}}></td>
+          <td><input type="number" name="11to12ithelp" value={{stats['11to12ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>12 - 1 PM</td>
+          <td><input type="number" name="12to1dir" value={{stats['12to1dir']}}></td>
+          <td><input type="number" name="12to1help" value={{stats['12to1help']}}></td>
+          <td><input type="number" name="12to1referral" value={{stats['12to1referral']}}></td>
+          <td><input type="number" name="12to1equipment" value={{stats['12to1equipment']}}></td>
+          <td><input type="number" name="12to1ithelp" value={{stats['12to1ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>1 - 2 PM</td>
+          <td><input type="number" name="1to2dir" value={{stats['1to2dir']}}></td>
+          <td><input type="number" name="1to2help" value={{stats['1to2help']}}></td>
+          <td><input type="number" name="1to2referral" value={{stats['1to2referral']}}></td>
+          <td><input type="number" name="1to2equipment" value={{stats['1to2equipment']}}></td>
+          <td><input type="number" name="1to2ithelp" value={{stats['1to2ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>2 - 3 PM</td>
+          <td><input type="number" name="2to3dir" value={{stats['2to3dir']}}></td>
+          <td><input type="number" name="2to3help" value={{stats['2to3help']}}></td>
+          <td><input type="number" name="2to3referral" value={{stats['2to3referral']}}></td>
+          <td><input type="number" name="2to3equipment" value={{stats['2to3equipment']}}></td>
+          <td><input type="number" name="2to3ithelp" value={{stats['2to3ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>3 - 4 PM</td>
+          <td><input type="number" name="3to4dir" value={{stats['3to4dir']}}</td>
+          <td><input type="number" name="3to4help" value={{stats['3to4help']}}></td>
+          <td><input type="number" name="3to4referral" value={{stats['3to4referral']}}></td>
+          <td><input type="number" name="3to4equipment" value={{stats['3to4equipment']}}></td>
+          <td><input type="number" name="3to4ithelp" value={{stats['3to4ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>4 - 5 PM</td>
+          <td><input type="number" name="4to5dir" value={{stats['4to5dir']}}></td>
+          <td><input type="number" name="4to5help" value={{stats['4to5help']}}></td>
+          <td><input type="number" name="4to5referral" value={{stats['4to5referral']}}></td>
+          <td><input type="number" name="4to5equipment" value={{stats['4to5equipment']}}></td>
+          <td><input type="number" name="4to5ithelp" value={{stats['4to5ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>5 - 6 PM</td>
+          <td><input type="number" name="5to6dir" value={{stats['5to6dir']}}></td>
+          <td><input type="number" name="5to6help" value={{stats['5to6help']}}></td>
+          <td><input type="number" name="5to6referral" value={{stats['5to6referral']}}></td>
+          <td><input type="number" name="5to6equipment" value={{stats['5to6equipment']}}></td>
+          <td><input type="number" name="5to6ithelp" value={{stats['5to6ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>6 - 7 PM</td>
+          <td><input type="number" name="6to7dir" value={{stats['6to7dir']}}></td>
+          <td><input type="number" name="6to7help" value={{stats['6to7help']}}></td>
+          <td><input type="number" name="6to7referral" value={{stats['6to7referral']}}></td>
+          <td><input type="number" name="6to7equipment" value={{stats['6to7equipment']}}></td>
+          <td><input type="number" name="6to7ithelp" value={{stats['6to7ithelp']}}></td>
+        </tr>
+        <tr>
+          <td>7 - Close</td>
+          <td><input type="number" name="7toclosedir" value={{stats['7toclosedir']}}></td>
+          <td><input type="number" name="7toclosehelp" value={{stats['7toclosehelp']}}></td>
+          <td><input type="number" name="7toclosereferral" value={{stats['7toclosereferral']}}></td>
+          <td><input type="number" name="7tocloseequipment" value={{stats['7tocloseequipment']}}></td>
+          <td><input type="number" name="7tocloseithelp" value={{stats['7tocloseithelp']}}></td>
+        </tr>
+      </table>
+      <input type="submit" value="Submit">
+    </form>
+  </div>
+</body></html>
