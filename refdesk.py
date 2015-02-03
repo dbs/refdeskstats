@@ -2,7 +2,7 @@
 
 Display the stats in a useful way with charts and download links"""
 
-from flask import Flask, abort, request, render_template, Response, make_response
+from flask import Flask, abort, request, render_template, make_response
 from os.path import abspath, dirname
 import datetime
 import psycopg2
@@ -67,12 +67,13 @@ def get_db():
         print(e)
 
 @app.route(URL_BASE, methods=['GET', 'POST'])
-def submit():
+def submit(date=None):
     "Either show the form, or process the form"
     if request.method == 'POST':
         return eat_stat_form()
     else:
-        return show_stat_form()
+        #return show_stat_form()
+        return edit_data(date)
 
 @app.errorhandler(500)
 def page_not_found(err):
@@ -96,7 +97,8 @@ def eat_stat_form():
             if key == 'refdate':
                 continue
             for val in form.getlist(key):
-                cur.execute('INSERT INTO refstats (refdate, refstat, refcount) VALUES (%s, %s, %s)', (fdate, key, val))
+                cur.execute("""INSERT INTO refstats (refdate, refstat, refcount) 
+                            VALUES (%s, %s, %s)""", (fdate, key, val))
         dbh.commit()
         dbh.close()
         message = "Your form was successfully submitted."
@@ -104,9 +106,9 @@ def eat_stat_form():
     except:
         return abort(500)
 
-def show_stat_form():
-    "Show the pretty form for the user"
-    return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()))
+#def show_stat_form():
+    #"Show the pretty form for the user"
+    #return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()))
 
 def get_stats(date):
     "Get the stats from the database"
@@ -162,7 +164,9 @@ def get_csv(filename):
         if str(filename) == 'alldata':
             cur.execute("SELECT refdate, refstat, refcount FROM refview")
         else:
-            cur.execute("SELECT refdate, refstat, refcount FROM refview WHERE refdate=%s", (str(filename),))
+            cur.execute("""SELECT refdate, refstat, refcount
+                        FROM refview WHERE refdate=%s""",
+                        (str(filename),))
         csvgen = StringIO.StringIO()
         csvfile = csv.writer(csvgen)
         for row in cur.fetchall():
@@ -180,7 +184,9 @@ def get_dataArray(date):
     try:
         data = get_db()
         cur = data.cursor()
-        cur.execute("SELECT refdate, refstat, refcount FROM refview WHERE refdate=%s", (str(date),))
+        cur.execute("""SELECT refdate, refstat, refcount
+                    FROM refview WHERE refdate=%s""",
+                    (str(date),))
         timecodes = {
             "8to10": 1,
             "10to11": 2,
@@ -234,9 +240,16 @@ def get_timeArray(date):
         "If we want everyday in the month"
         if len(str(date)) == 7:
             date_year, date_month = parse_date(str(date))
-            cur.execute("SELECT refstat, sum(refcount) FROM refview WHERE date_part('year',refdate) = %s AND date_part('month',refdate) = %s GROUP BY refstat", (str(date_year), str(date_month)))
+            cur.execute("""SELECT refstat, sum(refcount)
+                        FROM refview
+                        WHERE date_part('year',refdate) = %s
+                        AND date_part('month',refdate) = %s
+                        GROUP BY refstat""",
+                        (str(date_year), str(date_month)))
         else:
-            cur.execute("SELECT refstat, refcount, refdate FROM refview WHERE refdate=%s", (str(date),))
+            cur.execute("""SELECT refstat, refcount, refdate
+                        FROM refview WHERE refdate=%s""",
+                        (str(date),))
 
         helpcodes = {
             "dir": 1,
@@ -452,25 +465,28 @@ def show_stats(date=None):
         return abort(500)
 
 @app.route(URL_BASE + 'edit/<date>', methods=['GET','POST'])
-def submit(date=None):
-    "Either show the form, or process the form"
-    if request.method == 'POST':
-        return eat_stat_form()
-    else:
-        return edit_data(date)
+#def submit(date=None):
+    #"Either show the form, or process the form"
+    #if request.method == 'POST':
+        #return eat_stat_form()
+    #else:
+        #return edit_data(date)
 
 def edit_data(date):
     "Add data to missing days or edit current data"
+    if request.method == 'POST':
+        return eat_stat_form()
     try:
         if date:
             stats = get_current_data(date)
             #print(date + 'stats:' + stats)
-            if stats:
-                return render_template('edit_stat_form.html', today=date, stats=stats)
-            else:
-                return render_template('stat_form.html', today=date)
+            #if stats:
+            return render_template('stat_form.html', today=date, stats=stats)
+            #else:
+                #return render_template('stat_form.html', today=date)
+                #return render_template('edit_stat_form.html', today=date, stats=stats)
         else:
-            return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()))
+            return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats={})
     except:
         return abort(500)
 
