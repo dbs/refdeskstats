@@ -161,7 +161,7 @@ def get_csv(filename):
         data = get_db()
         cur = data.cursor()
         #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
-        if str(filename) == 'alldata':
+        if str(filename) == 'allstats.csv':
             cur.execute("SELECT refdate, refstat, refcount FROM refview")
         else:
             cur.execute("""SELECT refdate, refstat, refcount
@@ -501,7 +501,7 @@ def download_file(filename=None):
             csv_file = filename + ".csv"
         else:
             csv_data = get_csv('alldata')
-            csv_file = "alldata.csv"
+            csv_file = filename
         response = make_response(csv_data)
         response_header = "attachment; fname=" + csv_file
         response.headers["Content-Type"] = 'text/csv'

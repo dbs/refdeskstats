@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Show Research Help Stats</title>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
@@ -61,7 +62,7 @@
 
     </div>
 
-    <p><a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a></p>
+    <!--<p><a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a></p>-->
     
     <details>
         <summary>Missing Statistics</summary>
@@ -95,7 +96,7 @@
             {% else %}
             <li>Unpossible, no dates have data input</li>
             {% endfor %}
-	    <li><a href="/refdesk-stats/download">All Statistics</a>(Download Only)</li>
+	    <!--<li><a href="/refdesk-stats/download/allstats.csv">All Statistics</a>(Download Only)</li>-->
         </ul>
     </details>
 </body>
