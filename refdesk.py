@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# To run sraight from the command-line.
+
 """Collect daily reference desk statistics in a database
 
 Display the stats in a useful way with charts and download links"""
