@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# To run sraight from the command-line.
 
 """Collect daily reference desk statistics in a database
 
@@ -7,18 +6,13 @@ Display the stats in a useful way with charts and download links"""
 
 from flask import Flask, abort, request, render_template, make_response
 from os.path import abspath, dirname
+from config import config
 import datetime
 import psycopg2
 import StringIO
 import csv
 
-#URL_BASE = '/refdesk-stats/'
-URL_BASE = '/'
-
-# Database connection info
-DB_NAME = 'refstats'
-#DB_HOST = 'localhost'
-DB_USER = 'refstats'
+verbose = False
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
@@ -63,23 +57,29 @@ def get_db():
     """
     try:
         return psycopg2.connect(
-            database=DB_NAME,
-            user=DB_USER
+            database=config['DB_NAME'],
+            user=config['DB_USER']
         )
     except Exception, e:
         print(e)
 
-@app.route(URL_BASE, methods=['GET', 'POST'])
+@app.route(config['URL_BASE'], methods=['GET', 'POST'])
 def submit(date=None):
     "Either show the form, or process the form"
     if request.method == 'POST':
         return eat_stat_form()
     else:
         #return show_stat_form()
+        if verbose: print('Before queueing data edit.')
         return edit_data(date)
 
-@app.errorhandler(500)
+@app.errorhandler(404)
 def page_not_found(err):
+    "Give a simple 404 error page."
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def page_broken(err):
     """
     Let people know something went wrong
 
@@ -190,40 +190,26 @@ def get_dataArray(date):
         cur.execute("""SELECT refdate, refstat, refcount
                     FROM refview WHERE refdate=%s""",
                     (str(date),))
-        timecodes = {
-            "8to10": 1,
-            "10to11": 2,
-            "11to12": 3,
-            "12to1": 4,
-            "1to2": 5,
-            "2to3": 6,
-            "3to4": 7,
-            "4to5": 8,
-            "5to6": 9,
-            "6to7": 10,
-            "7toclose": 11
-        }
-        stack = [['Timeslot', '8-10AM', '10-11AM', '11AM-12PM', '12-1PM', '1-2PM', '2-3PM', '3-4PM', '4-5PM', '5-6PM', '6-7PM', '7PM-Close', {'role': 'annotation'}]]
+        stack = config['stack'];
 
-        directional = ["Directional", None, None, None, None, None, None, None, None, None, None, None, '']
-        coll_serv = ["Help with Collections/Services", None, None, None, None, None, None, None, None, None, None, None, '']
-        referral = ["Referral to Librarian", None, None, None, None, None, None, None, None, None, None, None, '']
-        equip = ["Equipment", None, None, None, None, None, None, None, None, None, None, None, '']
-        prin_soft = ["Help with Printers/Software", None, None, None, None, None, None, None, None, None, None, None, '']
+        directional = config['directional']
+        coll_serv = config['collect/serv']
+        referral = config['referral']
+        equip = config['equip']
+        prin_soft = config['print/software']
 
         for row in cur.fetchall():
             timeslot, stat = parse_stat(row[1])
-            #print stat, timeslot
             if stat == 'dir':
-                directional[timecodes[timeslot]] = row[2]
+                directional[config['timecodes'][timeslot]] = row[2]
             elif stat == 'equipment':
-                equip[timecodes[timeslot]] = row[2]
+                equip[config['timecodes'][timeslot]] = row[2]
             elif stat == 'help':
-                coll_serv[timecodes[timeslot]] = row[2]
+                coll_serv[config['timecodes'][timeslot]] = row[2]
             elif stat == 'ithelp':
-                prin_soft[timecodes[timeslot]] = row[2]
+                prin_soft[config['timecodes'][timeslot]] = row[2]
             elif stat == 'referral':
-                referral[timecodes[timeslot]] = row[2]
+                referral[config['timecodes'][timeslot]] = row[2]
 
         data.commit()
         data.close()
@@ -240,7 +226,7 @@ def get_timeArray(date):
         data = get_db()
         cur = data.cursor()
         #cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(date),))
-        "If we want everyday in the month"
+        """If we want everyday in the month"""
         if len(str(date)) == 7:
             date_year, date_month = parse_date(str(date))
             cur.execute("""SELECT refstat, sum(refcount)
@@ -254,56 +240,16 @@ def get_timeArray(date):
                         FROM refview WHERE refdate=%s""",
                         (str(date),))
 
-        helpcodes = {
-            "dir": 1,
-            "equipment": 2,
-            "help": 3,
-            "ithelp": 4,
-            "referral": 5
-        }
-        stack = [['Refstat', 'Directional', 'Equipment', 'Help with Collections/Services', 'Help with Printers/Software', 'Referral to Librarian', {'role': 'annotation'}]]
-        times = [
-            ["8-10AM", None, None, None, None, None, ''],
-            ["10-11AM", None, None, None, None, None, ''],
-            ["11AM-12PM", None, None, None, None, None, ''],
-            ["12-1PM", None, None, None, None, None, ''],
-            ["1-2PM", None, None, None, None, None, ''],
-            ["2-3PM", None, None, None, None, None, ''],
-            ["3-4PM", None, None, None, None, None, ''],
-            ["4-5PM", None, None, None, None, None, ''],
-            ["5-6PM", None, None, None, None, None, ''],
-            ["6-7PM", None, None, None, None, None, ''],
-            ["7-Close", None, None, None, None, None, '']
-        ]
+        stack = config['stack']
+        times = config['times']
 
         for row in cur.fetchall():
             timeslot, stat = parse_stat(row[0])
             #print(timeslot, stat, row[1])
             #print(helpcodes[stat])
-            if timeslot == '8to10':
-                times[0][helpcodes[stat]] = row[1]
-            elif timeslot == '10to11':
-                times[1][helpcodes[stat]] = row[1]
-                #print(time2)
-            elif timeslot == '11to12':
-                times[2][helpcodes[stat]] = row[1]
-            elif timeslot == '12to1':
-                times[3][helpcodes[stat]] = row[1]
-            elif timeslot == '1to2':
-                times[4][helpcodes[stat]] = row[1]
-            elif timeslot == '2to3':
-                times[5][helpcodes[stat]] = row[1]
-            elif timeslot == '3to4':
-                times[6][helpcodes[stat]] = row[1]
-            elif timeslot == '4to5':
-                times[7][helpcodes[stat]] = row[1]
-            elif timeslot == '5to6':
-                times[8][helpcodes[stat]] = row[1]
-            elif timeslot == '6to7':
-                times[9][helpcodes[stat]] = row[1]
-            elif timeslot == '7toclose':
-                times[10][helpcodes[stat]] = row[1]
-
+            if timeslot in config['timecodes']:
+                times[config['timecodes'][timeslot]][config['helpcodes'][stat]] = row[1]
+            
         data.commit()
         data.close()
         for time in times:
@@ -315,7 +261,7 @@ def get_timeArray(date):
         print(e)
 
 def get_weekdayArray(date):
-    "Put the data into an array for google charts"
+    """Put the data into an array for google charts"""
     try:
         data = get_db()
         cur = data.cursor()
@@ -326,42 +272,14 @@ def get_weekdayArray(date):
             WHERE refdate::text LIKE %s
             ORDER BY day_of_week""", (str(month),))
 
-        helpcodes = {
-            "dir": 1,
-            "equipment": 2,
-            "help": 3,
-            "ithelp": 4,
-            "referral": 5
-        }
-
-        stack = [['Days_of_Week', 'Directional', 'Equipment', 'Help with Collections/Services', 'Help with Printers/Software', 'Referral to Librarian', {'role': 'annotation'}]]
-        days = [
-            ["Sunday", 0, 0, 0, 0, 0, ''],
-            ["Monday", 0, 0, 0, 0, 0, ''],
-            ["Tuesday", 0, 0, 0, 0, 0, ''],
-            ["Wednesday", 0, 0, 0, 0, 0, ''],
-            ["Thursday", 0, 0, 0, 0, 0, ''],
-            ["Friday", 0, 0, 0, 0, 0, ''],
-            ["Saturday", 0, 0, 0, 0, 0, '']
-        ]
+        stack = config['stack']
+        days = config['days']
 
         for row in cur.fetchall():
-            "Get the data for each day of the month and do something useful with it"
+            """Get the data for each day of the month and do something useful with it"""
             timeslot, stat = parse_stat(row[0])
-            if row[2] == 0:
-                days[0][helpcodes[stat]] += row[1]
-            elif row[2] == 1:
-                days[1][helpcodes[stat]] += row[1]
-            elif row[2] == 2:
-                days[2][helpcodes[stat]] += row[1]
-            elif row[2] == 3:
-                days[3][helpcodes[stat]] += row[1]
-            elif row[2] == 4:
-                days[4][helpcodes[stat]] += row[1]
-            elif row[2] == 5:
-                days[5][helpcodes[stat]] += row[1]
-            elif row[2] == 6:
-                days[6][helpcodes[stat]] += row[1]
+            if row[2] >= 0 and row[2] <= 6:
+                days[row[2]][config['helpcodes'][stat]] += row[1]
 
         data.commit()
         data.close()
@@ -441,8 +359,8 @@ def get_current_data(date):
     except Exception, e:
         print(e)
 
-@app.route(URL_BASE + 'view/', methods=['GET'])
-@app.route(URL_BASE + 'view/<date>', methods=['GET'])
+@app.route(config['URL_BASE'] + 'view/', methods=['GET'])
+@app.route(config['URL_BASE'] + 'view/<date>', methods=['GET'])
 def show_stats(date=None):
     "Lets try to get all dates with data input"
     try:
@@ -467,7 +385,7 @@ def show_stats(date=None):
     except:
         return abort(500)
 
-@app.route(URL_BASE + 'edit/<date>', methods=['GET','POST'])
+@app.route(config['URL_BASE'] + 'edit/<date>', methods=['GET','POST'])
 #def submit(date=None):
     #"Either show the form, or process the form"
     #if request.method == 'POST':
@@ -484,17 +402,19 @@ def edit_data(date):
             stats = get_current_data(date)
             #print(date + 'stats:' + stats)
             #if stats:
+            if verbose: print ('before page render')
             return render_template('stat_form.html', today=date, stats=stats)
             #else:
                 #return render_template('stat_form.html', today=date)
                 #return render_template('edit_stat_form.html', today=date, stats=stats)
         else:
+            if verbose: print ('before page render')
             return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats={})
     except:
         return abort(500)
 
-@app.route(URL_BASE + 'download/')
-@app.route(URL_BASE + 'download/<filename>')
+@app.route(config['URL_BASE'] + 'download/')
+@app.route(config['URL_BASE'] + 'download/<filename>')
 def download_file(filename=None):
     "Downloads a file in CSV format"
     try:
@@ -514,4 +434,4 @@ def download_file(filename=None):
         return abort(500)
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5555)
+    app.run(debug=True, host=config['HOST'], port=config['PORT'])
