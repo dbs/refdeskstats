@@ -107,7 +107,8 @@ def eat_stat_form():
         fdate = form['refdate']
         for time in config['times']:
             for stat in config['helpcodes']:
-                print(time+stat)
+                if verbose:
+                    print(time, stat)
                 val_en = form[time+stat+'_en']
                 val_fr = form[time+stat+'_fr']
                 cur.execute("""INSERT INTO refdeskstats (refdate, reftime, reftype, refcount_en, refcount_fr) 
@@ -201,7 +202,7 @@ def get_dataArray(date):
         cur.execute("""SELECT refdate, reftime, reftype, refcount_en,
                        refcount_fr FROM refstatview WHERE refdate=%s""",
                        (str(date),))
-        stack = copy.deepcopy(config['stack'])
+        stack = copy.deepcopy(config['stack_a'])
         array = copy.deepcopy(config['array'])
 
         for row in cur.fetchall():
@@ -226,7 +227,7 @@ def get_timeArray(date):
         data = get_db()
         cur = data.cursor()
         #cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(date),))
-        """If we want everyday in the month"""
+        #"""If we want everyday in the month"""
         if len(str(date)) == 7:
             date_year, date_month = parse_date(str(date))
             cur.execute("""SELECT reftime, reftype,
@@ -241,16 +242,17 @@ def get_timeArray(date):
                         FROM refstatview WHERE refdate=%s""",
                         (str(date),))
 
-        stack = copy.deepcopy(config['stack'])
+        stack = copy.deepcopy(config['stack_b'])
         times = copy.deepcopy(config['times'])
 
         for row in cur.fetchall():
-            timeslot = row[0]
+            timeslot = str(row[0])
             stat = row[1]
             #print(timeslot, stat, row[1])
             #print(helpcodes[stat])
-            if timeslot in config['timecodes']:
-                times[config['timecodes'][timeslot]][config['helpcodes'][stat]] = row[1]
+            #if timeslot in config['timelist']:
+            times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_en']] = row[2]
+            times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_fr']] = row[3]
             
         data.commit()
         data.close()
@@ -274,8 +276,8 @@ def get_weekdayArray(date):
             WHERE refdate::text LIKE %s
             ORDER BY day_of_week""", (str(month),))
 
-        stack = config['stack']
-        days = config['days']
+        stack = copy.deepcopy(config['stack_a'])
+        days = copy.deepcopy(config['days'])
 
         for row in cur.fetchall():
             """Get the data for each day of the month and do something useful with it"""

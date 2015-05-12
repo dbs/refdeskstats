@@ -9,7 +9,7 @@ config = {
     'PORT': 6666,
 
     #Blank Lists to copy from.
-    'stack' : [
+    'stack_a' : [
         [
         'Timeslot',
         '8-9AM',
@@ -30,6 +30,23 @@ config = {
         '11PM-12AM',
         '12-1AM',
         '1-2AM',
+        {'role': 'annotation'}
+        ]
+    ],
+    
+    'stack_b' : [
+        [
+        'Refstat',
+        'Directional (EN)',
+        'Directional (FR)',
+        'Equipment (EN)',
+        'Equipment (FR)',
+        'Help with Collections/Services (EN)',
+        'Help with Collections/Services (FR)',
+        'Help with Printers/Software (EN)',
+        'Help with Printers/Software (FR)',
+        'Referral (EN)',
+        'Referral (FR)',
         {'role': 'annotation'}
         ]
     ],
@@ -64,7 +81,7 @@ config = {
         ["8-9PM", None, None, None, None, None, None, None, None, None, None, ''],
         ["9-10PM", None, None, None, None, None, None, None, None, None, None, ''],
         ["10-11PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["11PM-11AM", None, None, None, None, None, None, None, None, None, None, ''],
+        ["11PM-12AM", None, None, None, None, None, None, None, None, None, None, ''],
         ["12-1AM", None, None, None, None, None, None, None, None, None, None, ''],
         ["1-2AM", None, None, None, None, None, None, None, None, None, None, '']
     ],
@@ -86,10 +103,10 @@ config = {
         "equipment_en": 3,
         "equipment_fr": 4,
         "help_en": 5,
-        "help_en": 6,
+        "help_fr": 6,
         "ithelp_en": 7,
-        "ithelp_en": 8,
-        "referral_fr": 9,
+        "ithelp_fr": 8,
+        "referral_en": 9,
         "referral_fr": 10
     },
 
