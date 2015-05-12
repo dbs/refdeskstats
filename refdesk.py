@@ -217,7 +217,6 @@ def get_timeArray(date):
         for row in cur.fetchall():
             timeslot = str(row[0])
             stat = row[1]
-            #print(timeslot, stat, row[1])
             #print(helpcodes[stat])
             #if timeslot in config['timelist']:
             times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_en']] = row[2]
@@ -245,16 +244,16 @@ def get_weekdayArray(date):
             WHERE refdate::text LIKE %s
             ORDER BY day_of_week""", (str(month),))
 
-        stack = copy.deepcopy(config['stack_a'])
+        stack = copy.deepcopy(config['stack_b'])
         days = copy.deepcopy(config['days'])
 
         for row in cur.fetchall():
             """Get the data for each day of the month and do something useful with it"""
             timeslot = row[0]
-            stat = row[1][:-3]
-            if row[2] >= 0 and row[2] <= 6:
-                days[row[2]][config['helpcodes'][stat]+'_en'] += row[2]
-                days[row[2]][config['helpcodes'][stat]+'_fr'] += row[3]
+            stat = row[1]
+            if row[4] >= 0 and row[4] <= 6:
+                days[int(row[4])][config['helpcodes'][stat+'_en']] += row[2]
+                days[int(row[4])][config['helpcodes'][stat+'_fr']] += row[3]
 
         data.commit()
         data.close()
@@ -277,6 +276,8 @@ def parse_stat(stat):
     "Returns the type of stat and the time slot"
 
     for s in ['dir', 'equipment', 'ithelp', 'referral', 'help']:
+        if verbose: 
+            print(stat)
         pos = stat.find(s)
         if pos > -1:
             return stat[0:pos], s
