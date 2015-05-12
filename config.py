@@ -66,24 +66,24 @@ config = {
     },
     
     'times' : [
-        ["8-9AM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["9-10AM", None, None, None, None, None, None, None, None, None, None,  ''],
-        ["10-11AM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["11AM-12PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["12-1PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["1-2PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["2-3PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["3-4PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["4-5PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["5-6PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["6-7PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["7-8PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["8-9PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["9-10PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["10-11PM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["11PM-12AM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["12-1AM", None, None, None, None, None, None, None, None, None, None, ''],
-        ["1-2AM", None, None, None, None, None, None, None, None, None, None, '']
+        ["8-9AM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["9-10AM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  ''],
+        ["10-11AM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["11AM-12PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["12-1PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["1-2PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["2-3PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["3-4PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["4-5PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["5-6PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["6-7PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["7-8PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["8-9PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["9-10PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["10-11PM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["11PM-12AM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["12-1AM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ''],
+        ["1-2AM", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '']
     ],
 
     'days' : [
@@ -97,7 +97,7 @@ config = {
     ],
 
     #For DB Parsing
-    'helpcodes' : {
+    'helpcodes': {
         "dir_en": 1,
         "dir_fr": 2,
         "equipment_en": 3,
@@ -110,6 +110,11 @@ config = {
         "referral_fr": 10
     },
 
+    'helplist': [
+        'dir', 'help', 'ithelp',
+        'referral', 'equipment'
+    ],
+    
     'timelist': [
         '8', '9', '10', '11',
         '12', '13', '14', '15',

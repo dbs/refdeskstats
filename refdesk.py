@@ -105,8 +105,10 @@ def eat_stat_form():
         cur = dbh.cursor()
         form = request.form
         fdate = form['refdate']
-        for time in config['times']:
-            for stat in config['helpcodes']:
+        if verbose:
+            print('reached data insertion...')
+        for time in config['timelist']:
+            for stat in config['helplist']:
                 if verbose:
                     print(time, stat)
                 val_en = form[time+stat+'_en']
@@ -230,6 +232,8 @@ def get_timeArray(date):
         #"""If we want everyday in the month"""
         if len(str(date)) == 7:
             date_year, date_month = parse_date(str(date))
+            if verbose:
+                print('viewing:'+ str((date_year,  date_month)))
             cur.execute("""SELECT reftime, reftype,
                         sum(refcount_en), sum(refcount_fr)
                         FROM refstatview
@@ -320,7 +324,7 @@ def get_missing(date):
         month = str(date) + '%'
         day = str(date) + '-01'
         cur.execute("""
-            With x AS (SELECT DISTINCT refdate from refview
+            With x AS (SELECT DISTINCT refdate from refstatview
                         WHERE refdate::text LIKE %s),
                  y AS (SELECT generate_series(date %s,
                        date %s + '1 month'::interval - '1 day'::interval,
@@ -346,15 +350,17 @@ def get_current_data(date):
     try:
         data = get_db()
         cur = data.cursor()
-        cur.execute("""SELECT reftime::TEXT || reftype
-                    AS refstat, refcount_en, refcount_fr
+        cur.execute("""SELECT reftime, reftype,
+                    refcount_en, refcount_fr
                     FROM refstatview WHERE refdate=%s""", 
                     (str(date),))
 
         stats = {}
         for row in cur.fetchall():
-            stats[row[0]+'_en'] = row[1]
-            stats[row[0]+'_fr'] = row[2]
+            time = row[0]
+            stat = row[1]
+            stats[time+stat+'_en'] = row[2]
+            stats[time+stat+'_fr'] = row[3]
 
         data.commit()
         data.close()
