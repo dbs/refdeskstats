@@ -405,17 +405,21 @@ def edit_data(date):
     try:
         if date:
             stats = get_current_data(date)
-            #print(date + 'stats:' + stats)
+            #if verbose:
+            #    print(date + 'stats:' + stats)
             #if stats:
-            if verbose: print ('before page render')
+            if verbose:
+                print ('before page render: stats found')
             return render_template('stat_form.html', today=date, stats=stats)
             #else:
                 #return render_template('stat_form.html', today=date)
                 #return render_template('edit_stat_form.html', today=date, stats=stats)
         else:
-            if verbose: print ('before page render')
+            if verbose:
+                print ('before page render: no stats')
             return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats={})
-    except:
+    except Exception, e:
+        print(e);
         return abort(500)
 
 @app.route(config['URL_BASE'] + 'download/')
@@ -435,7 +439,8 @@ def download_file(filename=None):
         response.headers["Content-Type"] = 'text/csv'
         response.headers["Content-Disposition"] = response_header
         return response
-    except:
+    except Exception, e:
+        print(e);
         return abort(500)
 
 if __name__ == '__main__':
