@@ -4,8 +4,6 @@
 
 Display the stats in a useful way with charts and download links"""
 
-#TODO: Kill words: refcount, refstat; replace with expanded versions (time/type split, lang split).
-
 from flask import Flask, abort, request, render_template, make_response
 from os.path import abspath, dirname
 from config import config
