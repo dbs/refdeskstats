@@ -103,17 +103,17 @@ config = {
     #For DB Parsing
     'helpcodes': {
         'internal_en': 1,
-        'internal_en': 2,
+        'internal_fr': 2,
         'referral_en': 3,
-        'referral_en': 4,
+        'referral_fr': 4,
         'equipment_en': 5,
         'equipment_fr': 6,
-        'ithelp': 7,
-        'ithelp': 8,
+        'ithelp_en': 7,
+        'ithelp_fr': 8,
         'external_en': 9,
-        'external_en': 10,
+        'external_fr': 10,
         'other_en': 11,
-        'other_en': 12
+        'other_fr': 12
     },
 
     'helplist': [
