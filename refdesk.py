@@ -328,7 +328,7 @@ def get_current_data(date):
 
         stats = {}
         for row in cur.fetchall():
-            time = row[0]
+            time = str(row[0])
             stat = row[1]
             stats[time+stat+'_en'] = row[2]
             stats[time+stat+'_fr'] = row[3]
@@ -396,7 +396,10 @@ def edit_data(date):
         else:
             if verbose:
                 print ('before page render: no stats')
-            return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats={})
+            date = datetime.datetime.now().strftime("%Y-%m-%d")
+            print(date)
+            stats = get_current_data(date)
+            return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats=stats)
     except Exception, e:
         print(e);
         return abort(500)
