@@ -19,7 +19,7 @@
   </div>
   <div>
     <form method="post">
-      Date: <input type="date" id="refdate" name="refdate"{% if today %} value={{ today }} {% endif %}>
+      Date: <input type="date" onblur="window.location.replace('/refdesk-stats/edit/'+document.getElementById('refdate').value)" id="refdate" name="refdate"{% if today %} value={{ today }} {% endif %}>
       <button type='button' onclick="window.location.replace('/refdesk-stats/edit/'+document.getElementById('refdate').value)">Load Date</button>
       <br />
       <br />
@@ -88,7 +88,6 @@
         {% endfor %}
       </table>
       <br />
-      (Note: track separately.)
       <table>
         <tr>
           <th></th>
@@ -109,5 +108,8 @@
       <br />
       <input type="submit" value="Submit">
     </form>
+    <br />
+    <a href="/refdesk-stats/view/{{ today }}">View this day as a chart</a><br />
+    <a href="/refdesk-stats/view/{{ today[:-3] }}">View this month's chart</a>
   </div>
 </body></html>
