@@ -5,6 +5,7 @@
 Display the stats in a useful way with charts and download links"""
 
 from flask import Flask, abort, request, render_template, make_response
+#from flask.ext.babel import Babel
 from os.path import abspath, dirname
 from config import config
 import sys
@@ -18,6 +19,7 @@ verbose = True
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
+#babel = Babel(app)
 
 def get_db():
     """
@@ -173,14 +175,14 @@ def get_dataArray(date):
         for row in cur.fetchall():
             timeslot = str(row[1])
             stat = row[2]
-            array[stat+'_en'][config['timecodes'][timeslot]] = row[3]
-            array[stat+'_fr'][config['timecodes'][timeslot]] = row[4]
+            array[config['helpcodes'][stat+'_en']-1][config['timecodes'][timeslot]] = row[3]
+            array[config['helpcodes'][stat+'_fr']-1][config['timecodes'][timeslot]] = row[4]
 
         data.commit()
         data.close()
 
-        for stat_type in array:
-            stack.append(array[stat_type])
+        for stat_data in array:
+            stack.append(stat_data)
 
         return stack
     except Exception, e:
@@ -212,6 +214,8 @@ def get_timeArray(date):
         stack = copy.deepcopy(config['stack_b'])
         times = copy.deepcopy(config['times'])
 
+        print(times)
+
         for row in cur.fetchall():
             timeslot = str(row[0])
             stat = row[1]
@@ -219,6 +223,9 @@ def get_timeArray(date):
             #if timeslot in config['timelist']:
             times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_en']] = row[2]
             times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_fr']] = row[3]
+
+        
+        print(times)
             
         data.commit()
         data.close()
@@ -273,7 +280,7 @@ def parse_date(date):
 def parse_stat(stat):
     "Returns the type of stat and the time slot"
 
-    for s in ['dir', 'equipment', 'ithelp', 'referral', 'help']:
+    for s in config['helplist']:
         if verbose: 
             print(stat)
         pos = stat.find(s)

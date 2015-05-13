@@ -1,30 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+ <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Research help statistics</title>
   <style>
-    
-    input[type='number'] {
-        width: 5em;
-    }
-    th {
-        border: solid 1px #CCCCCC;
-    }
-    td:nth-child(1) {
-        border: solid 1px #CCCCCC;
-    }
-    tr td:nth-child(2n+2) {
-        background-color: #DDDDFF;
-    }
-    tr td:nth-child(2n+3) {
-        background-color: #FFDDDD;
-    }
-    input {
-        background: inherit;
-    }
-
+    {% include "style.css" %}
   </style>
 </head>
 <body>
@@ -42,14 +23,16 @@
       <table>
         <tr>
           <th></th>
-          <th colspan='2'>Directional</th>
-          <th colspan='2'>Collections/Services</th>
-          <th colspan='2'>Referral to Librarian</th>
+          <th colspan='2'>Internal</th>
+          <th colspan='2'>Referral</th>
           <th colspan='2'>Equipment</th>
-          <th colspan='2'>Printers/Software</th>
+          <th colspan='2'>OneCard/IT</th>
+          <th colspan='2'>External</th>
+          <th colspan='2'>Other</th>
         </tr>
         <tr>
             <td></td>
+            <td>EN</td><td>FR</td>
             <td>EN</td><td>FR</td>
             <td>EN</td><td>FR</td>
             <td>EN</td><td>FR</td>
@@ -82,16 +65,18 @@
         {% for time in timecodes %}
           <tr>
             <td>{{ time[1] }}</td>
-            <td><input type="number" name="{{time[0]}}dir_en" value={{stats[time[0]~'dir_en']|default('0')}}></td>
-            <td><input type="number" name="{{time[0]}}dir_fr" value={{stats[time[0]~'dir_fr']|default('0')}}></td>
-            <td><input type="number" name="{{time[0]}}help_en" value={{stats[time[0]~'help_en']|default('0')}}></td>
-            <td><input type="number" name="{{time[0]}}help_fr" value={{stats[time[0]~'help_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}internal_en" value={{stats[time[0]~'internal_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}internal_fr" value={{stats[time[0]~'internal_fr']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}referral_en" value={{stats[time[0]~'referral_en']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}referral_fr" value={{stats[time[0]~'referral_fr']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}equipment_en" value={{stats[time[0]~'equipment_en']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}equipment_fr" value={{stats[time[0]~'equipment_fr']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}ithelp_en" value={{stats[time[0]~'ithelp_en']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}ithelp_fr" value={{stats[time[0]~'ithelp_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}external_en" value={{stats[time[0]~'external_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}external_fr" value={{stats[time[0]~'external_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}other_en" value={{stats[time[0]~'other_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}other_fr" value={{stats[time[0]~'other_fr']|default('0')}}></td>
           </tr>
         {% endfor %}
       </table>
