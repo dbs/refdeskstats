@@ -5,6 +5,7 @@
 Display the stats in a useful way with charts and download links"""
 
 from flask import Flask, abort, request, render_template, make_response
+#from flask.ext.babel import Babel
 from os.path import abspath, dirname
 from config import config
 import sys
@@ -18,6 +19,7 @@ verbose = True
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
+#babel = Babel(app)
 
 def get_db():
     """
@@ -273,7 +275,7 @@ def parse_date(date):
 def parse_stat(stat):
     "Returns the type of stat and the time slot"
 
-    for s in ['dir', 'equipment', 'ithelp', 'referral', 'help']:
+    for s in config['helplist']:
         if verbose: 
             print(stat)
         pos = stat.find(s)
