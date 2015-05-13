@@ -19,12 +19,16 @@
   </div>
   <div>
     <form method="post">
-      Date: <input type="date" name="refdate"{% if today %} value={{ today }} {% endif %}>
+      Date: <input type="date" id="refdate" name="refdate"{% if today %} value={{ today }} {% endif %}>
+      <button type='button' onclick="window.location.replace('/refdesk-stats/edit/'+document.getElementById('refdate').value)">Load Date</button>
+      <br />
+      <br />
       <table>
         <tr>
           <th></th>
           <th colspan='2'>Internal</th>
-          <th colspan='2'>Referral</th>
+          <th colspan='2'>Referral (Found)</th>
+          <th colspan='2'>Referral (N/A)</th>
           <th colspan='2'>Equipment</th>
           <th colspan='2'>OneCard/IT</th>
           <th colspan='2'>External</th>
@@ -32,6 +36,7 @@
         </tr>
         <tr>
             <td></td>
+            <td>EN</td><td>FR</td>
             <td>EN</td><td>FR</td>
             <td>EN</td><td>FR</td>
             <td>EN</td><td>FR</td>
@@ -67,8 +72,10 @@
             <td>{{ time[1] }}</td>
             <td><input type="number" name="{{time[0]}}internal_en" value={{stats[time[0]~'internal_en']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}internal_fr" value={{stats[time[0]~'internal_fr']|default('0')}}></td>
-            <td><input type="number" name="{{time[0]}}referral_en" value={{stats[time[0]~'referral_en']|default('0')}}></td>
-            <td><input type="number" name="{{time[0]}}referral_fr" value={{stats[time[0]~'referral_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}refer_yes_en" value={{stats[time[0]~'refer_yes_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}refer_yes_fr" value={{stats[time[0]~'refer_yes_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}refer_no_en" value={{stats[time[0]~'refer_no_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}refer_no_fr" value={{stats[time[0]~'refer_no_fr']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}equipment_en" value={{stats[time[0]~'equipment_en']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}equipment_fr" value={{stats[time[0]~'equipment_fr']|default('0')}}></td>
             <td><input type="number" name="{{time[0]}}ithelp_en" value={{stats[time[0]~'ithelp_en']|default('0')}}></td>
@@ -80,6 +87,26 @@
           </tr>
         {% endfor %}
       </table>
+      <br />
+      (Note: track separately.)
+      <table>
+        <tr>
+          <th></th>
+          <th colspan="2">Phone Call</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>EN</td><td>FR</td>
+        </tr>
+        {% for time in timecodes %}
+          <tr>
+            <td>{{ time[1] }}</td>
+            <td><input type="number" name="{{time[0]}}phone_en" value={{stats[time[0]~'phone_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}phone_fr" value={{stats[time[0]~'phone_fr']|default('0')}}></td>
+          </tr>
+        {% endfor %}
+      </table>
+      <br />
       <input type="submit" value="Submit">
     </form>
   </div>
