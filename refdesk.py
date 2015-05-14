@@ -4,7 +4,7 @@
 
 Display the stats in a useful way with charts and download links"""
 
-from flask import Flask, abort, request, render_template, make_response
+from flask import Flask, abort, request, render_template, make_response, g
 from flask_babelex import Babel
 from os.path import abspath, dirname
 from config import config
@@ -37,6 +37,18 @@ def get_db():
     except Exception, ex:
         print(ex)
 
+@babel.localeselector
+def get_locale():
+    return g.current_lang
+
+@app.before_request
+def before():
+    if request.view_args and 'lang' in request.view_args:
+        g.current_lang = request.view_args['lang']
+        request.view_args.pop('lang')
+
+
+@app.route(config['URL_BASE'], methods=['GET', 'POST'])
 @app.route(config['URL_BASE'], methods=['GET', 'POST'])
 def submit(date=None):
     "Either show the form, or process the form"

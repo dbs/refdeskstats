@@ -3,36 +3,37 @@
 <head>
  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Research help statistics</title>
+  <title>{%trans%}Research help statistics{%endtrans%}</title>
   <style>
     {% include "style.css" %}
   </style>
 </head>
 <body>
-  <h1>Enter Statistics</h1>
+  <h1>{% trans %}Entering Statistics{% endtrans %}</h1>
+  <a href='/refdesk-stats/{%trans%}fr{%endtrans%}/'>{%trans%}Francais{%endtrans%}</a>
   <div id="menu">
     <ul>
-      <li><a href="/refdesk-stats">Enter Statistics</a></li>
-      <li><a href="/refdesk-stats/view">View Statistics</a></li>
+      <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}">{% trans %}Enter Some Statistics{% endtrans %}</a></li>
+      <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}/view">{% trans %}View Statistics{% endtrans %}</a></li>
     </ul>
     <hr>
   </div>
   <div>
     <form method="post">
       Date: <input type="date" id="refdate" name="refdate"{% if today %} value={{ today }} {% endif %}>
-      <button type='button' onclick="window.location.replace('/refdesk-stats/edit/'+document.getElementById('refdate').value)">Load Date</button>
+      <button type='button' onclick="window.location.replace('/refdesk-stats/edit/'+document.getElementById('refdate').value)">{%trans%}Load Date{%endtrans%}</button>
       <br />
       <br />
       <table style='float: left;'>
         <tr>
           <th></th>
-          <th colspan='2'>Internal</th>
-          <th colspan='2'>Referral (Found)</th>
-          <th colspan='2'>Referral (N/A)</th>
-          <th colspan='2'>Equipment</th>
-          <th colspan='2'>OneCard/IT</th>
-          <th colspan='2'>External</th>
-          <th colspan='2'>Other</th>
+          <th colspan='2'>{% trans %}Internal{% endtrans %}</th>
+          <th colspan='2'>{% trans %}Referral (Found){% endtrans %}</th>
+          <th colspan='2'>{% trans %}Referral (N/A){% endtrans %}</th>
+          <th colspan='2'>{% trans %}Equipment{% endtrans %}</th>
+          <th colspan='2'>{% trans %}OneCard/IT{% endtrans %}</th>
+          <th colspan='2'>{% trans %}External{% endtrans %}</th>
+          <th colspan='2'>{% trans %}Other{% endtrans %}</th>
         </tr>
         <tr>
             <td></td>
@@ -87,11 +88,10 @@
           </tr>
         {% endfor %}
       </table>
-      <br />
       <table>
         <tr>
           <th></th>
-          <th colspan="2">Phone Call</th>
+          <th colspan="2">{%trans%}Phone Call{%endtrans%}</th>
         </tr>
         <tr>
           <td></td>
@@ -106,10 +106,10 @@
         {% endfor %}
       </table>
       <br />
-      <input type="submit" value="Submit">
+      <input type="submit" value="{%trans%}Submit{%endtrans%}">
     </form>
     <br />
-    <a href="/refdesk-stats/view/{{ today }}">View this day as a chart</a><br />
-    <a href="/refdesk-stats/view/{{ today[:-3] }}">View this month's chart</a>
+    <a href="/refdesk-stats/{%trans%}en{%endtrans%}/view/{{ today }}">{% trans %}View this day as a chart{% endtrans %}</a><br />
+    <a href="/refdesk-stats/{%trans%}en{%endtrans%}/view/{{ today[:-3] }}">{% trans %}View this month's chart{% endtrans %}</a>
   </div>
 </body></html>

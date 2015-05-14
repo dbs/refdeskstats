@@ -2,7 +2,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Show Research Help Stats</title>
+  <title>{%trans%}Show Research Help Stats{%endtrans%}</title>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
         //load the visualization library from Google and set a listener
@@ -44,11 +44,12 @@
     </script>
 </head>
 <body>
-    <h1>Ref Desk Statistics</h1>
+    <h1>{%trans%}Ref Desk Statistics{%endtrans%}</h1>
+    <a href='/refdesk-stats/{%trans%}fr{%endtrans%}/'>{%trans%}Francais{%endtrans%}</a>
     <div id="menu">
         <ul>
-            <li><a href="/refdesk-stats">Enter Statistics</a></li>
-            <li><a href="/refdesk-stats/view">View Statistics</a></li>
+            <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}">{%trans%}Enter Statistics{%endtrans%}</a></li>
+            <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}/view">{%trans%}View Statistics{%endtrans%}</a></li>
         </ul>
         <hr>
     </div>
@@ -68,9 +69,9 @@
         <summary>Missing Statistics</summary>
         <ul>
             {% for day in missing %}
-            <li><a href="/refdesk-stats/edit/{{day.refdate}}">{{ day.refdate }}</a></li>
+            <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}/edit/{{day.refdate}}">{{ day.refdate }}</a></li>
             {% else %}
-            <li>Excellent! No days are missing data!</i>
+            <li>{%trans%}Excellent! No days are missing data!{%endtrans%}</i>
             {% endfor %}
         </ul>
     </details>
@@ -82,7 +83,7 @@
             {% for month in months %}
             <li><a href="{{ month.month }}">{{ month.month }}</a></li>
             {% else %}
-            <li>Crazy, no months have data</li>
+            <li>{%trans%}No months have data{%endtrans%}</li>
             {% endfor %}
         </ul>
     </details>
@@ -94,7 +95,7 @@
             {% for date in dates %}
             <li><a href="{{ date.refdate }}">{{ date.refdate }}</a></li>
             {% else %}
-            <li>Unpossible, no dates have data input</li>
+            <li>{%trans%}Unpossible, no dates have data input!{%endtrans%}</li>
             {% endfor %}
 	    <!--<li><a href="/refdesk-stats/download/allstats.csv">All Statistics</a>(Download Only)</li>-->
         </ul>

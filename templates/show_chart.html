@@ -2,7 +2,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Show Research Help Stats</title>
+  <title>{%trans%}Show Research Help Stats{%endtrans%}</title>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
         //load the visualization library from Google and set a listener
@@ -41,11 +41,12 @@
     </script>
 </head>
 <body>
-    <h1>Ref Desk Statistics</h1>
+    <h1>{%trans%}Ref Desk Statistics{%endtrans%}</h1>
+    <a href='/refdesk-stats/{%trans%}fr{%endtrans%}/'>{%trans%}Francais{%endtrans%}</a>
     <div id="menu">
         <ul>
-            <li><a href="/refdesk-stats">Enter Statistics</a></li>
-            <li><a href="/refdesk-stats/view">View Statistics</a></li>
+            <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}">{%trans%}Enter Statistics{%endtrans%}</a></li>
+            <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}/view">{%trans%}View Statistics{%endtrans%}</a></li>
         </ul>
         <hr>
     </div>
@@ -58,16 +59,16 @@
 
     </div>
     <!--<p><a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a></p>-->
-    <p><a href="/refdesk-stats/edit/{{date}}">Edit this data</a></p>
+    <p><a href="/refdesk-stats/{%trans%}en{%endtrans%}/edit/{{date}}">{%trans%}Edit this data{%endtrans%}</a></p>
 
     <details>
-        <summary>Statistics broken down by month</summary>
+        <summary>{%trans%}Statistics broken down by month{%endtrans%}</summary>
     <!--<p>Listed below are all the months that have statistics entered</p>-->
         <ul>
             {% for month in months %}
             <li><a href="{{ month.month }}">{{ month.month }}</a></li>
             {% else %}
-            <li>Crazy, no months have data</li>
+            <li>{%trans%}No months have data!{%endtrans%}</li>
             {% endfor %}
         </ul>
     </details>

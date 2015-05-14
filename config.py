@@ -2,7 +2,7 @@
 
 config = {
     #Basic Settings
-    'URL_BASE': '/refdesk-stats/',
+    'URL_BASE': '/refdesk-stats/<lang>/',
     'DB_NAME': 'refstats',
     'DB_USER': 'victoria',
     'HOST': '0.0.0.0',
