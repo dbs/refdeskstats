@@ -1,0 +1,10 @@
+input[type='number'] {
+    width: 5em;
+}
+table{
+    border-spacing: 0px;
+}
+th, td {
+    border: solid 1px #CCCCCC;
+    text-align: center;
+}

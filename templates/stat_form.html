@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
+ <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Research help statistics</title>
+  <style>
+    {% include "style.css" %}
+  </style>
 </head>
 <body>
   <h1>Enter Statistics</h1>
@@ -16,43 +19,97 @@
   </div>
   <div>
     <form method="post">
-      Date: <input type="date" name="refdate"{% if today %} value={{ today }} {% endif %}>
+      Date: <input type="date" onblur="window.location.replace('/refdesk-stats/edit/'+document.getElementById('refdate').value)" id="refdate" name="refdate"{% if today %} value={{ today }} {% endif %}>
+      <button type='button' onclick="window.location.replace('/refdesk-stats/edit/'+document.getElementById('refdate').value)">Load Date</button>
+      <br />
+      <br />
       <table>
         <tr>
           <th></th>
-          <th>Directional</th>
-          <th>Help with Collections or Services</th>    
-          <th>Referral to Librarian</th>
-          <th>Equipment</th>
-          <th>Help with Printers/Software</th>
+          <th colspan='2'>Internal</th>
+          <th colspan='2'>Referral (Found)</th>
+          <th colspan='2'>Referral (N/A)</th>
+          <th colspan='2'>Equipment</th>
+          <th colspan='2'>OneCard/IT</th>
+          <th colspan='2'>External</th>
+          <th colspan='2'>Other</th>
         </tr>
+        <tr>
+            <td></td>
+            <td>EN</td><td>FR</td>
+            <td>EN</td><td>FR</td>
+            <td>EN</td><td>FR</td>
+            <td>EN</td><td>FR</td>
+            <td>EN</td><td>FR</td>
+            <td>EN</td><td>FR</td>
+            <td>EN</td><td>FR</td>
+        </tr>
+        {# This is a list of 2-tuples, to preserve order. #}
         {% 
             set timecodes = [
-                ("8to10", '8 - 10 AM'),
-                ("10to11", '10 - 11 AM'),
-                ("11to12", '11 AM - 12 PM'),
-                ("12to1", '12 - 1 PM'),
-                ("1to2", '1 - 2 PM'),
-                ("2to3", '2 - 3 PM'),
-                ("3to4", '3 - 4 PM'),
-                ("4to5", '4 - 5 PM'),
-                ("5to6", '5 - 6 PM'),
-                ("6to7", '6 - 7 PM'),
-                ("7toclose", '7 PM - Closing')
+                ('8', '8 - 9 AM'),
+                ('9', '9 - 10 AM'),
+                ('10', '10 - 11 AM'),
+                ('11', '11AM - 12 PM'),
+                ('12', '12 PM - 1 PM'),
+                ('13', '1 - 2 PM'),
+                ('14', '2 - 3 PM'),
+                ('15', '3 - 4 PM'),
+                ('16', '4 - 5 PM'),
+                ('17', '5 - 6 PM'),
+                ('18', '6 - 7 PM'),
+                ('19', '7 - 8 PM'),
+                ('20', '8 - 9 PM'),
+                ('21', '9 - 10 PM'),
+                ('22', '10 - 11 PM'),
+                ('23', '11 PM - 12 AM'),
+                ('0', '12 - 1 AM'),
+                ('1', '1 - 2 AM')
             ]
         %}
         {% for time in timecodes %}
           <tr>
             <td>{{ time[1] }}</td>
-            <td><input type="number" name="{{time[0]}}dir" value={{stats[time[0]~'dir']|default('0')}}></td>
-            <td><input type="number" name="{{time[0]}}help" value={{stats[time[0]~'help']|default('0')}}></td>
-            <td><input type="number" name="{{time[0]}}referral" value={{stats[time[0]~'referral']|default('0')}}></td>
-            <td><input type="number" name="{{time[0]}}equipment" value={{stats[time[0]~'equipment']|default('0')}}></td>
-            <td><input type="number" name="{{time[0]}}ithelp" value={{stats[time[0]~'ithelp']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}internal_en" value={{stats[time[0]~'internal_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}internal_fr" value={{stats[time[0]~'internal_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}refer_yes_en" value={{stats[time[0]~'refer_yes_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}refer_yes_fr" value={{stats[time[0]~'refer_yes_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}refer_no_en" value={{stats[time[0]~'refer_no_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}refer_no_fr" value={{stats[time[0]~'refer_no_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}equipment_en" value={{stats[time[0]~'equipment_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}equipment_fr" value={{stats[time[0]~'equipment_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}ithelp_en" value={{stats[time[0]~'ithelp_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}ithelp_fr" value={{stats[time[0]~'ithelp_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}external_en" value={{stats[time[0]~'external_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}external_fr" value={{stats[time[0]~'external_fr']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}other_en" value={{stats[time[0]~'other_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}other_fr" value={{stats[time[0]~'other_fr']|default('0')}}></td>
           </tr>
         {% endfor %}
       </table>
+      <br />
+      <table>
+        <tr>
+          <th></th>
+          <th colspan="2">Phone Call</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>EN</td><td>FR</td>
+        </tr>
+        {% for time in timecodes %}
+          <tr>
+            <td>{{ time[1] }}</td>
+            <td><input type="number" name="{{time[0]}}phone_en" value={{stats[time[0]~'phone_en']|default('0')}}></td>
+            <td><input type="number" name="{{time[0]}}phone_fr" value={{stats[time[0]~'phone_fr']|default('0')}}></td>
+          </tr>
+        {% endfor %}
+      </table>
+      <br />
       <input type="submit" value="Submit">
     </form>
+    <br />
+    <a href="/refdesk-stats/view/{{ today }}">View this day as a chart</a><br />
+    <a href="/refdesk-stats/view/{{ today[:-3] }}">View this month's chart</a>
   </div>
 </body></html>

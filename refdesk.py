@@ -5,47 +5,21 @@
 Display the stats in a useful way with charts and download links"""
 
 from flask import Flask, abort, request, render_template, make_response
+#from flask.ext.babel import Babel
 from os.path import abspath, dirname
 from config import config
+import sys
 import datetime
 import psycopg2
 import StringIO
+import copy
 import csv
 
-verbose = False
+verbose = True
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
-
-# Table definition
-# CREATE TABLE refstats (
-#     refdate DATE,
-#     refstat TEXT,
-#     refcount INTEGER,
-#     create_time TIMESTAMP DEFAULT NOW()
-# );
-# ALTER TABLE refstats ADD PRIMARY KEY (refdate, refstat);
-
-# Table permissions
-# GRANT SELECT, INSERT, UPDATE, DELETE ON refstats TO refstats;
-
-# View definition (most recent timestamps)
-# CREATE VIEW refview AS WITH x AS (
-#    SELECT refstat, refdate, MAX(create_time)
-#    AS create_time FROM refstats
-#    GROUP BY refstat, refdate)
-#    SELECT x.refstat, x.refdate, x.create_time, r.refcount
-#    FROM refstats r INNER JOIN x ON (
-#       x.create_time = r.create_time AND
-#       x.refstat = r.refstat AND
-#       x.refdate = r.refdate)
-#    ORDER BY refstat;
-
-# View definition (add the day of week to refview)
-# CREATE VIEW refview_day_of_week AS
-#    SELECT refstat, refdate, EXTRACT(DOW FROM refdate)
-#    AS day_of_week, create_time, refcount
-#    FROM refview;
+#babel = Babel(app)
 
 def get_db():
     """
@@ -95,18 +69,23 @@ def eat_stat_form():
         dbh = get_db()
         cur = dbh.cursor()
         form = request.form
-        fdate = form.getlist('refdate')[0]
-        for key in form.keys():
-            if key == 'refdate':
-                continue
-            for val in form.getlist(key):
-                cur.execute("""INSERT INTO refstats (refdate, refstat, refcount) 
-                            VALUES (%s, %s, %s)""", (fdate, key, val))
+        fdate = form['refdate']
+        if verbose:
+            print('reached data insertion...')
+        for time in config['timelist']:
+            for stat in config['helplist']:
+                if verbose:
+                    print(time, stat)
+                val_en = form[time+stat+'_en']
+                val_fr = form[time+stat+'_fr']
+                cur.execute("""INSERT INTO refdeskstats (refdate, reftime, reftype, refcount_en, refcount_fr) 
+                    VALUES (%s, %s, %s, %s, %s)""", (fdate, time, stat, val_en, val_fr))
         dbh.commit()
         dbh.close()
         message = "Your form was successfully submitted."
         return render_template('menu_interface.html', message=message)
-    except:
+    except Exception, e:
+        print(e);
         return abort(500)
 
 #def show_stat_form():
@@ -121,7 +100,7 @@ def get_stats(date):
         monthdate = str(date) + '%'
         cur.execute(""" 
             SELECT DISTINCT refdate
-            FROM refview
+            FROM refstatview
             WHERE refdate::text LIKE %s
             ORDER BY refdate desc""",
         (str(monthdate),))
@@ -144,7 +123,7 @@ def get_months():
                     '-' ||date_part('month',refdate) AS date_piece,
                     (date_part('year',refdate)|| '-' ||date_part('month',refdate)||
                     '-01')::date AS date 
-                    FROM refview GROUP BY date_piece
+                    FROM refstatview GROUP BY date_piece
                     ORDER BY date desc""")
         months = []
         for row in cur.fetchall():
@@ -165,15 +144,15 @@ def get_csv(filename):
         cur = data.cursor()
         #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
         if str(filename) == 'allstats.csv':
-            cur.execute("SELECT refdate, refstat, refcount FROM refview")
+            cur.execute("SELECT refdate, reftime, reftype, refcount_en, refcount_fr FROM refstatview")
         else:
-            cur.execute("""SELECT refdate, refstat, refcount
-                        FROM refview WHERE refdate=%s""",
+            cur.execute("""SELECT refdate, reftime, reftype, refcount_en, refcount_fr
+                        FROM refstatview WHERE refdate=%s""",
                         (str(filename),))
         csvgen = StringIO.StringIO()
         csvfile = csv.writer(csvgen)
         for row in cur.fetchall():
-            csvfile.writerow([row[0], row[1], row[2]])
+            csvfile.writerow([row[0], row[1], row[2], row[3], row[4]])
         csv_result = csvgen.getvalue()
         csvgen.close()
         data.commit()
@@ -187,34 +166,23 @@ def get_dataArray(date):
     try:
         data = get_db()
         cur = data.cursor()
-        cur.execute("""SELECT refdate, refstat, refcount
-                    FROM refview WHERE refdate=%s""",
-                    (str(date),))
-        stack = config['stack'];
-
-        directional = config['directional']
-        coll_serv = config['collect/serv']
-        referral = config['referral']
-        equip = config['equip']
-        prin_soft = config['print/software']
+        cur.execute("""SELECT refdate, reftime, reftype, refcount_en,
+                       refcount_fr FROM refstatview WHERE refdate=%s""",
+                       (str(date),))
+        stack = copy.deepcopy(config['stack_a'])
+        array = copy.deepcopy(config['array'])
 
         for row in cur.fetchall():
-            timeslot, stat = parse_stat(row[1])
-            if stat == 'dir':
-                directional[config['timecodes'][timeslot]] = row[2]
-            elif stat == 'equipment':
-                equip[config['timecodes'][timeslot]] = row[2]
-            elif stat == 'help':
-                coll_serv[config['timecodes'][timeslot]] = row[2]
-            elif stat == 'ithelp':
-                prin_soft[config['timecodes'][timeslot]] = row[2]
-            elif stat == 'referral':
-                referral[config['timecodes'][timeslot]] = row[2]
+            timeslot = str(row[1])
+            stat = row[2]
+            array[config['helpcodes'][stat+'_en']-1][config['timecodes'][timeslot]] = row[3]
+            array[config['helpcodes'][stat+'_fr']-1][config['timecodes'][timeslot]] = row[4]
 
         data.commit()
         data.close()
-        for stat_type in [directional, coll_serv, referral, equip, prin_soft]:
-            stack.append(stat_type)
+
+        for stat_data in array:
+            stack.append(stat_data)
 
         return stack
     except Exception, e:
@@ -226,29 +194,38 @@ def get_timeArray(date):
         data = get_db()
         cur = data.cursor()
         #cur.execute("SELECT refdate, refstat, refcount FROM refstats WHERE refdate=%s", (str(date),))
-        """If we want everyday in the month"""
+        #"""If we want everyday in the month"""
         if len(str(date)) == 7:
             date_year, date_month = parse_date(str(date))
-            cur.execute("""SELECT refstat, sum(refcount)
-                        FROM refview
+            if verbose:
+                print('viewing:'+ str((date_year,  date_month)))
+            cur.execute("""SELECT reftime, reftype,
+                        sum(refcount_en), sum(refcount_fr)
+                        FROM refstatview
                         WHERE date_part('year',refdate) = %s
                         AND date_part('month',refdate) = %s
-                        GROUP BY refstat""",
+                        GROUP BY reftime, reftype""",
                         (str(date_year), str(date_month)))
         else:
-            cur.execute("""SELECT refstat, refcount, refdate
-                        FROM refview WHERE refdate=%s""",
+            cur.execute("""SELECT reftime, reftype, refcount_en, refcount_fr, refdate
+                        FROM refstatview WHERE refdate=%s""",
                         (str(date),))
 
-        stack = config['stack']
-        times = config['times']
+        stack = copy.deepcopy(config['stack_b'])
+        times = copy.deepcopy(config['times'])
+
+        print(times)
 
         for row in cur.fetchall():
-            timeslot, stat = parse_stat(row[0])
-            #print(timeslot, stat, row[1])
+            timeslot = str(row[0])
+            stat = row[1]
             #print(helpcodes[stat])
-            if timeslot in config['timecodes']:
-                times[config['timecodes'][timeslot]][config['helpcodes'][stat]] = row[1]
+            #if timeslot in config['timelist']:
+            times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_en']] = row[2]
+            times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_fr']] = row[3]
+
+        
+        print(times)
             
         data.commit()
         data.close()
@@ -267,29 +244,29 @@ def get_weekdayArray(date):
         cur = data.cursor()
         month = str(date) + '%'
         cur.execute("""
-            SELECT refstat, refcount, day_of_week
-            FROM refview_day_of_week
+            SELECT reftime, reftype, refcount_en, refcount_fr, day_of_week
+            FROM refstatview_day_of_week
             WHERE refdate::text LIKE %s
             ORDER BY day_of_week""", (str(month),))
 
-        stack = config['stack']
-        days = config['days']
+        stack = copy.deepcopy(config['stack_b'])
+        days = copy.deepcopy(config['days'])
 
         for row in cur.fetchall():
             """Get the data for each day of the month and do something useful with it"""
-            timeslot, stat = parse_stat(row[0])
-            if row[2] >= 0 and row[2] <= 6:
-                days[row[2]][config['helpcodes'][stat]] += row[1]
+            timeslot = row[0]
+            stat = row[1]
+            if row[4] >= 0 and row[4] <= 6:
+                days[int(row[4])][config['helpcodes'][stat+'_en']] += row[2]
+                days[int(row[4])][config['helpcodes'][stat+'_fr']] += row[3]
 
         data.commit()
         data.close()
 
         for day in days:
             stack.append(day)
-
         #print(stack)
         return stack
-
 
     except Exception, e:
         print(e)
@@ -303,7 +280,9 @@ def parse_date(date):
 def parse_stat(stat):
     "Returns the type of stat and the time slot"
 
-    for s in ['dir', 'equipment', 'ithelp', 'referral', 'help']:
+    for s in config['helplist']:
+        if verbose: 
+            print(stat)
         pos = stat.find(s)
         if pos > -1:
             return stat[0:pos], s
@@ -316,7 +295,7 @@ def get_missing(date):
         month = str(date) + '%'
         day = str(date) + '-01'
         cur.execute("""
-            With x AS (SELECT DISTINCT refdate from refview
+            With x AS (SELECT DISTINCT refdate from refstatview
                         WHERE refdate::text LIKE %s),
                  y AS (SELECT generate_series(date %s,
                        date %s + '1 month'::interval - '1 day'::interval,
@@ -342,14 +321,17 @@ def get_current_data(date):
     try:
         data = get_db()
         cur = data.cursor()
-        cur.execute("""SELECT refstat, refcount
-                    FROM refview
-                    WHERE refdate=%s""",
-        (str(date),))
+        cur.execute("""SELECT reftime, reftype,
+                    refcount_en, refcount_fr
+                    FROM refstatview WHERE refdate=%s""", 
+                    (str(date),))
 
         stats = {}
         for row in cur.fetchall():
-            stats[row[0]] = row[1]
+            time = str(row[0])
+            stat = row[1]
+            stats[time+stat+'_en'] = row[2]
+            stats[time+stat+'_fr'] = row[3]
 
         data.commit()
         data.close()
@@ -368,6 +350,7 @@ def show_stats(date=None):
         months = get_months()
         if date:
             tarray = get_timeArray(date)
+            #If the date specified is a full month. len(YYYY-MM) == 7.
             if len(str(date)) == 7:
                 wdarray = get_weekdayArray(date)
                 missing = get_missing(date)
@@ -385,7 +368,6 @@ def show_stats(date=None):
     except:
         return abort(500)
 
-@app.route(config['URL_BASE'] + 'edit/<date>', methods=['GET','POST'])
 #def submit(date=None):
     #"Either show the form, or process the form"
     #if request.method == 'POST':
@@ -393,6 +375,8 @@ def show_stats(date=None):
     #else:
         #return edit_data(date)
 
+@app.route(config['URL_BASE'], methods=['GET','POST'])
+@app.route(config['URL_BASE'] + 'edit/<date>', methods=['GET','POST'])
 def edit_data(date):
     "Add data to missing days or edit current data"
     if request.method == 'POST':
@@ -400,17 +384,24 @@ def edit_data(date):
     try:
         if date:
             stats = get_current_data(date)
-            #print(date + 'stats:' + stats)
+            #if verbose:
+            #    print(date + 'stats:' + stats)
             #if stats:
-            if verbose: print ('before page render')
+            if verbose:
+                print ('before page render: stats found')
             return render_template('stat_form.html', today=date, stats=stats)
             #else:
                 #return render_template('stat_form.html', today=date)
                 #return render_template('edit_stat_form.html', today=date, stats=stats)
         else:
-            if verbose: print ('before page render')
-            return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats={})
-    except:
+            if verbose:
+                print ('before page render: no stats')
+            date = datetime.datetime.now().strftime("%Y-%m-%d")
+            print(date)
+            stats = get_current_data(date)
+            return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats=stats)
+    except Exception, e:
+        print(e);
         return abort(500)
 
 @app.route(config['URL_BASE'] + 'download/')
@@ -430,7 +421,8 @@ def download_file(filename=None):
         response.headers["Content-Type"] = 'text/csv'
         response.headers["Content-Disposition"] = response_header
         return response
-    except:
+    except Exception, e:
+        print(e);
         return abort(500)
 
 if __name__ == '__main__':
