@@ -15,7 +15,7 @@ import StringIO
 import copy
 import csv
 
-verbose = True
+VERBOSE = True
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
@@ -34,8 +34,8 @@ def get_db():
             database=config['DB_NAME'],
             user=config['DB_USER']
         )
-    except Exception, e:
-        print(e)
+    except Exception, ex:
+        print(ex)
 
 @app.route(config['URL_BASE'], methods=['GET', 'POST'])
 def submit(date=None):
@@ -44,7 +44,8 @@ def submit(date=None):
         return eat_stat_form()
     else:
         #return show_stat_form()
-        if verbose: print('Before queueing data edit.')
+        if VERBOSE:
+            print('Before queueing data edit.')
         return edit_data(date)
 
 @app.errorhandler(404)
@@ -70,11 +71,11 @@ def eat_stat_form():
         cur = dbh.cursor()
         form = request.form
         fdate = form['refdate']
-        if verbose:
+        if VERBOSE:
             print('reached data insertion...')
         for time in config['timelist']:
             for stat in config['helplist']:
-                if verbose:
+                if VERBOSE:
                     print(time, stat)
                 val_en = form[time+stat+'_en']
                 val_fr = form[time+stat+'_fr']
@@ -84,8 +85,8 @@ def eat_stat_form():
         dbh.close()
         message = "Your form was successfully submitted."
         return render_template('menu_interface.html', message=message)
-    except Exception, e:
-        print(e);
+    except Exception, ex:
+        print(ex)
         return abort(500)
 
 #def show_stat_form():
@@ -111,8 +112,8 @@ def get_stats(date):
         dbase.commit()
         dbase.close()
         return dates
-    except Exception, e:
-        print(e)
+    except Exception, ex:
+        print(ex)
 
 def get_months():
     "Get the months that have data"
@@ -134,8 +135,8 @@ def get_months():
         dbase.close()
         # print(months)
         return months
-    except Exception, e:
-        print(e)
+    except Exception, ex:
+        print(ex)
 
 def get_csv(filename):
     "Get the data in CSV format"
@@ -158,10 +159,10 @@ def get_csv(filename):
         data.commit()
         data.close()
         return csv_result
-    except Exception, e:
-        print(e)
+    except Exception, ex:
+        print(ex)
 
-def get_dataArray(date):
+def get_data_array(date):
     "Put the data into an array for Google charts"
     try:
         data = get_db()
@@ -185,10 +186,10 @@ def get_dataArray(date):
             stack.append(stat_data)
 
         return stack
-    except Exception, e:
-        print(e)
+    except Exception, ex:
+        print(ex)
 
-def get_timeArray(date):
+def get_time_array(date):
     "Put the data into an array for Google charts"
     try:
         data = get_db()
@@ -197,7 +198,7 @@ def get_timeArray(date):
         #"""If we want everyday in the month"""
         if len(str(date)) == 7:
             date_year, date_month = parse_date(str(date))
-            if verbose:
+            if VERBOSE:
                 print('viewing:'+ str((date_year,  date_month)))
             cur.execute("""SELECT reftime, reftype,
                         sum(refcount_en), sum(refcount_fr)
@@ -234,10 +235,10 @@ def get_timeArray(date):
             #print(time)
         #print(stack)
         return stack
-    except Exception, e:
-        print(e)
+    except Exception, ex:
+        print(ex)
 
-def get_weekdayArray(date):
+def get_weekday_array(date):
     """Put the data into an array for google charts"""
     try:
         data = get_db()
@@ -268,8 +269,8 @@ def get_weekdayArray(date):
         #print(stack)
         return stack
 
-    except Exception, e:
-        print(e)
+    except Exception, ex:
+        print(ex)
 
 def parse_date(date):
     "Returns the year and the month separately from the date"
@@ -281,7 +282,7 @@ def parse_stat(stat):
     "Returns the type of stat and the time slot"
 
     for s in config['helplist']:
-        if verbose: 
+        if VERBOSE: 
             print(stat)
         pos = stat.find(s)
         if pos > -1:
@@ -313,8 +314,8 @@ def get_missing(date):
         data.close()
 
         return missing
-    except Exception, e:
-        print(e)
+    except Exception, ex:
+        print(ex)
 
 def get_current_data(date):
     "Pull out the current data for a given day"
@@ -338,8 +339,8 @@ def get_current_data(date):
         #print(stats)
         return stats
 
-    except Exception, e:
-        print(e)
+    except Exception, ex:
+        print(ex)
 
 @app.route(config['URL_BASE'] + 'view/', methods=['GET'])
 @app.route(config['URL_BASE'] + 'view/<date>', methods=['GET'])
@@ -349,17 +350,17 @@ def show_stats(date=None):
         dates = get_stats(date)
         months = get_months()
         if date:
-            tarray = get_timeArray(date)
+            tarray = get_time_array(date)
             #If the date specified is a full month. len(YYYY-MM) == 7.
             if len(str(date)) == 7:
-                wdarray = get_weekdayArray(date)
+                wdarray = get_weekday_array(date)
                 missing = get_missing(date)
                 return render_template('show_mchart.html', dates=dates, \
                     tarray=tarray, date=date, wdarray=wdarray, months=months, \
                     missing=missing \
                 )
             else:
-                array = get_dataArray(date)
+                array = get_data_array(date)
                 return render_template('show_chart.html', dates=dates, \
                     array=array, tarray=tarray, date=date, months=months \
                 )
@@ -384,24 +385,24 @@ def edit_data(date):
     try:
         if date:
             stats = get_current_data(date)
-            #if verbose:
+            #if VERBOSE:
             #    print(date + 'stats:' + stats)
             #if stats:
-            if verbose:
+            if VERBOSE:
                 print ('before page render: stats found')
             return render_template('stat_form.html', today=date, stats=stats)
             #else:
                 #return render_template('stat_form.html', today=date)
                 #return render_template('edit_stat_form.html', today=date, stats=stats)
         else:
-            if verbose:
+            if VERBOSE:
                 print ('before page render: no stats')
             date = datetime.datetime.now().strftime("%Y-%m-%d")
             print(date)
             stats = get_current_data(date)
             return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats=stats)
-    except Exception, e:
-        print(e);
+    except Exception, ex:
+        print(ex)
         return abort(500)
 
 @app.route(config['URL_BASE'] + 'download/')
@@ -421,8 +422,8 @@ def download_file(filename=None):
         response.headers["Content-Type"] = 'text/csv'
         response.headers["Content-Disposition"] = response_header
         return response
-    except Exception, e:
-        print(e);
+    except Exception, ex:
+        print(ex)
         return abort(500)
 
 if __name__ == '__main__':
