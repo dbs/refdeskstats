@@ -1,10 +1,14 @@
 input[type='number'] {
-    width: 5em;
+    width: 4em;
+}
+input[type='submit'] {
+    width: 15em;
+    padding: 2px;
 }
 table{
     border-spacing: 0px;
 }
 th, td {
-    border: solid 1px #CCCCCC;
+    border: solid 1px #BBBBBB;
     text-align: center;
 }

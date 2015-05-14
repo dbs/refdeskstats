@@ -5,7 +5,7 @@
 Display the stats in a useful way with charts and download links"""
 
 from flask import Flask, abort, request, render_template, make_response
-#from flask.ext.babel import Babel
+from flask_babelex import Babel
 from os.path import abspath, dirname
 from config import config
 import sys
@@ -19,7 +19,7 @@ VERBOSE = True
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
-#babel = Babel(app)
+babel = Babel(app)
 
 def get_db():
     """

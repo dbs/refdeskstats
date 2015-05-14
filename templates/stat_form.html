@@ -4,6 +4,14 @@
  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Research help statistics</title>
+  <script>
+     
+    function check(){
+      if(document.forms[0]){
+        
+      }
+    }
+  </script>
   <style>
     {% include "style.css" %}
   </style>
@@ -19,7 +27,7 @@
   </div>
   <div>
     <form method="post">
-      Date: <input type="date" onblur="window.location.replace('/refdesk-stats/edit/'+document.getElementById('refdate').value)" id="refdate" name="refdate"{% if today %} value={{ today }} {% endif %}>
+      Date: <input type="date" id="refdate" name="refdate"{% if today %} value={{ today }} {% endif %}>
       <button type='button' onclick="window.location.replace('/refdesk-stats/edit/'+document.getElementById('refdate').value)">Load Date</button>
       <br />
       <br />
