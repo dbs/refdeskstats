@@ -9,18 +9,19 @@ CREATE TABLE refdeskstats (
 );
 
 CREATE TABLE users (
-    id INTEGER,
-    uname TEXT
+    id INTEGER NOT NULL,
+    uname TEXT NOT NULL,
+    expires TIMESTAMP DEFAULT NOW() + '04:00:00'::interval
 );
-
-ALTER TABLE users ADD PRIMARY KEY (id);
 
 --Primary Key
 --This has caused problems in development. Still being looked into.
---ALTER TABLE refdeskstats ADD PRIMARY KEY (refdate, reftime, reftype);
+ALTER TABLE refdeskstats ADD PRIMARY KEY (refdate, reftime, reftype);
+
+ALTER TABLE users ADD PRIMARY KEY (id);
 
 --Permission
-GRANT SELECT, INSERT, UPDATE, DELETE ON refstats TO refstats;
+GRANT SELECT, INSERT, UPDATE, DELETE ON refdeskstats TO refstats;
 
 --View definition (most recent timestamps)
 CREATE VIEW refstatview AS WITH x AS (
@@ -30,7 +31,7 @@ CREATE VIEW refstatview AS WITH x AS (
     )
     SELECT x.reftime, x.reftype, x.refdate,
     x.create_time, r.refcount_en, r.refcount_fr
-    FROM refstats r INNER JOIN x ON (
+    FROM refdeskstats r INNER JOIN x ON (
         x.create_time = r.create_time AND
         x.reftime = r.reftime AND
         x.reftype = r.reftype AND
