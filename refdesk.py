@@ -149,9 +149,9 @@ def get_locale():
 
 @app.before_request
 def pre_request():
-    print(session['uid'])
-    current_user = User.get_by_id(session['uid'])
     try:
+        print(session['uid'])
+        current_user = User.get_by_id(session['uid'])
         if current_user.expired():
             current_user.logout()
             logout_user()
