@@ -4,22 +4,32 @@
 
 Display the stats in a useful way with charts and download links"""
 
-from flask import Flask, abort, request, render_template, make_response, g
+from flask import Flask, abort, request, redirect, url_for, \
+                    render_template, make_response, g, session
 from flask_babelex import Babel
+from flask_login import LoginManager, login_required, current_user, \
+                        login_user, logout_user, AnonymousUserMixin
 from os.path import abspath, dirname
 from config import config
+# Secret key to be used. Host of the application should keep this secret.
+# The host should also generate their own secret key, however it may be.
+from secret import secret 
+import ldap
 import sys
 import datetime
 import psycopg2
 import StringIO
 import copy
 import csv
+import random
 
 VERBOSE = True
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
 babel = Babel(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 def get_db():
     """
@@ -37,19 +47,135 @@ def get_db():
     except Exception, ex:
         print(ex)
 
+def get_ldap_connection():
+    conn = ldap.initialize('ldap://142.51.1.221:389')
+    return conn
+
+class User():
+    __tablename__ = 'users'
+
+    def __init__(self, username, session_id = None):
+        self.uname = username
+        if not session_id:
+            self.id = random.SystemRandom().randint(-0xFFFFFF, 0xFFFFFF)
+        else:
+            self.id = session_id
+        print(self.id)
+   
+    @staticmethod 
+    def try_login(username, password):
+        conn = get_ldap_connection()
+        conn.simple_bind_s('cn=%s,ou=Empl,o=LUL' % username, password)
+ 
+    @staticmethod
+    def get_by_id(id):
+        dbh = get_db()
+        cur = dbh.cursor()
+        cur.execute("SELECT id, uname FROM users where id = %s" % id)
+        row = cur.fetchone()
+        try:
+            if row[0]:
+                i = row[0]
+                u = row[1]
+                dbh.close()
+                return User(u, i)
+            else:
+                dbh.close()
+                return None
+        except Exception, ex:
+            print(ex)
+        dbh.close()
+        # Executes is query returns no rows.
+        return None
+
+    @staticmethod
+    def get_by_uname(uname):
+        dbh = get_db()
+        cur = dbh.cursor()
+        cur.execute("SELECT id, uname FROM users")
+        for row in cur.fetchall():
+            if uname == row[1]:
+                dbh.close()
+                return User(row[1], row[0])
+            else:
+                return None
+        dbh.close()
+        return None
+
+    def add_to_db(self):
+        dbh = get_db()
+        cur = dbh.cursor()
+        cur.execute("""
+            INSERT INTO users (id, uname)
+            VALUES (%s, %s)""", (self.id, self.uname))
+        dbh.commit()
+        dbh.close()
+    
+    def logout(self):
+        dbh = get_db()
+        cur = dbh.cursor()
+        cur.execute("""
+            DELETE FROM users WHERE uname = '%s'""" % self.uname)
+        dbh.commit()
+        dbh.close()
+
+    def expired(self):
+        dbh = get_db()
+        cur = dbh.cursor()
+        cur.execute("""SELECT expires FROM users WHERE uname = %s AND id = %s""", (self.uname, self.id))
+        row = cur.fetchone()
+        if row[0] < datetime.datetime.now():
+            dbh.close()
+            return True
+        dbh.close()
+        return False
+
+    def is_authenticated(self):
+        return True
+    
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        print('self_id?')
+        return self.id
+
 @babel.localeselector
 def get_locale():
-    return g.current_lang
+    return g.get('current_lang','en');
 
 @app.before_request
-def before():
+def pre_request():
+    print(session['uid'])
+    current_user = User.get_by_id(session['uid'])
+    try:
+        if current_user.expired():
+            current_user.logout()
+            logout_user()
+    except Exception, ex:
+        print('Anonymous user fucking around.')
+
+    g.user = current_user
+
     if request.view_args and 'lang' in request.view_args:
         g.current_lang = request.view_args['lang']
         request.view_args.pop('lang')
 
 
+@login_manager.user_loader
+def load_user(id):
+    return User.get_by_id(id) 
+
+@login_manager.user_loader
+def load_user(id):
+    return User.get_by_id(id) 
+
 @app.route(config['URL_BASE'], methods=['GET', 'POST'])
 @app.route(config['URL_BASE'], methods=['GET', 'POST'])
+@login_required
 def submit(date=None):
     "Either show the form, or process the form"
     if request.method == 'POST':
@@ -59,6 +185,11 @@ def submit(date=None):
         if VERBOSE:
             print('Before queueing data edit.')
         return edit_data(date)
+
+@app.errorhandler(401)
+def page_forbidden(err):
+    "Redirect to the login page."
+    return render_template('login.html'), 200
 
 @app.errorhandler(404)
 def page_not_found(err):
@@ -75,6 +206,35 @@ def page_broken(err):
     devops person to suss it out.
     """
     return render_template('500.html'), 500
+
+def login():
+    """
+    Attempt to log into the LDAP server with the authentication
+    provided by a form.
+    """
+    try:
+        if current_user.is_authenticated():
+            print(current_user)
+            return redirect(config['URL_BASE'][:-7]+'en/')
+
+        form = request.form
+        username = form['user']
+        password = form['pass']
+
+        print(username)
+
+        User.try_login(username, password)
+        user = User.get_by_uname(username)
+        if not user:
+            user = User(username)
+            user.add_to_db()
+        session['uid'] = user.id
+        login_user(user)
+        return redirect(config['URL_BASE'][:-7]+'en/')
+
+    except Exception, ex:
+        print(ex)
+        return render_template('login_fail.html'), 200
 
 def eat_stat_form():
     "Shove the form data into the database"
@@ -100,10 +260,6 @@ def eat_stat_form():
     except Exception, ex:
         print(ex)
         return abort(500)
-
-#def show_stat_form():
-    #"Show the pretty form for the user"
-    #return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()))
 
 def get_stats(date):
     "Get the stats from the database"
@@ -354,8 +510,23 @@ def get_current_data(date):
     except Exception, ex:
         print(ex)
 
+@app.route(config['URL_BASE'] + 'login/', methods=['GET', 'POST'])
+def login_form():
+    if request.method == 'POST':
+        return login()
+    else:
+        return render_template('login.html');
+
+@app.route(config['URL_BASE'] + 'logout/', methods=['GET'])
+@login_required
+def logout():
+    current_user.logout()
+    logout_user()
+    return redirect(config['URL_BASE'][:-7]+'en/login/')
+
 @app.route(config['URL_BASE'] + 'view/', methods=['GET'])
 @app.route(config['URL_BASE'] + 'view/<date>', methods=['GET'])
+@login_required
 def show_stats(date=None):
     "Lets try to get all dates with data input"
     try:
@@ -381,15 +552,9 @@ def show_stats(date=None):
     except:
         return abort(500)
 
-#def submit(date=None):
-    #"Either show the form, or process the form"
-    #if request.method == 'POST':
-        #return eat_stat_form()
-    #else:
-        #return edit_data(date)
-
 @app.route(config['URL_BASE'], methods=['GET','POST'])
 @app.route(config['URL_BASE'] + 'edit/<date>', methods=['GET','POST'])
+@login_required
 def edit_data(date):
     "Add data to missing days or edit current data"
     if request.method == 'POST':
@@ -419,6 +584,7 @@ def edit_data(date):
 
 @app.route(config['URL_BASE'] + 'download/')
 @app.route(config['URL_BASE'] + 'download/<filename>')
+@login_required
 def download_file(filename=None):
     "Downloads a file in CSV format"
     try:
@@ -438,5 +604,6 @@ def download_file(filename=None):
         print(ex)
         return abort(500)
 
+app.secret_key = secret
 if __name__ == '__main__':
     app.run(debug=True, host=config['HOST'], port=config['PORT'])

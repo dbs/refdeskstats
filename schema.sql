@@ -1,4 +1,4 @@
---Table definition
+--Table definitions
 CREATE TABLE refdeskstats (
     refdate DATE,
     reftime INTEGER,
@@ -7,6 +7,13 @@ CREATE TABLE refdeskstats (
     refcount_fr INTEGER,
     create_time TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE users (
+    id INTEGER,
+    uname TEXT
+);
+
+ALTER TABLE users ADD PRIMARY KEY (id);
 
 --Primary Key
 --This has caused problems in development. Still being looked into.
