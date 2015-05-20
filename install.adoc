@@ -1,0 +1,39 @@
+= Installation
+Victoria Lacroix
+
+== Description
+
+This is an application allowing the collection of reference desk statistics through a web application with Flask.
+
+== Requirements
+
+This application requires:
+
+* +Flask+
+** +Flask-Babel+
+** +Flask-Login+
+* +Python-LDAP+
+
+Simply +pip-install+ them and you'll be on your way out.
+
+== Database
+
+The database used is PostgreSQL. The file +schema.sql+ will have all of the SQL needed to generate the tables/permissions/views that the application demands.
+
+== Babel Install
+    
+Language translations for french are already included with the application, and should work out of the box.
+In the case they don't:
+
+    pybabel compile -i messages.pot -d translations/
+
+should be enough to fix it.
+    
+== Secret Key
+
+You'll need to generate your own secret key to sign cookies. Generally, the easiest way to do this would be:
+    
+    >>> import os
+    >>> os.urandom(24).encode('hex')
+    
+Which will give you a nice, long sequence of hex digits.
