@@ -7,6 +7,8 @@ config = {
     'DB_USER': 'victoria',
     'HOST': '0.0.0.0',
     'PORT': 6666,
+    'VERBOSE': False,
+    'DEBUG': False,
 
     #Blank Lists to copy from.
     'stack_a' : [

@@ -23,7 +23,7 @@ import copy
 import csv
 import random
 
-VERBOSE = True
+VERBOSE = config['VERBOSE']
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
@@ -606,4 +606,4 @@ def download_file(filename=None):
 
 app.secret_key = secret
 if __name__ == '__main__':
-    app.run(debug=True, host=config['HOST'], port=config['PORT'])
+    app.run(debug=config['DEBUG'], host=config['HOST'], port=config['PORT'])
