@@ -45,7 +45,8 @@ def get_db():
             user=config['DB_USER']
         )
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
 
 def get_ldap_connection():
     conn = ldap.initialize('ldap://142.51.1.221:389')
@@ -60,7 +61,8 @@ class User():
             self.id = random.SystemRandom().randint(-0xFFFFFF, 0xFFFFFF)
         else:
             self.id = session_id
-        print(self.id)
+        if VERBOSE:
+            print(self.id)
    
     @staticmethod 
     def try_login(username, password):
@@ -83,7 +85,8 @@ class User():
                 dbh.close()
                 return None
         except Exception, ex:
-            print(ex)
+            if VERBOSE:
+                print(ex)
         dbh.close()
         # Executes is query returns no rows.
         return None
@@ -140,7 +143,6 @@ class User():
         return False
 
     def get_id(self):
-        print('self_id?')
         return self.id
 
 @babel.localeselector
@@ -150,13 +152,15 @@ def get_locale():
 @app.before_request
 def pre_request():
     try:
-        print(session['uid'])
+        if VERBOSE:
+            print(session['uid'])
         current_user = User.get_by_id(session['uid'])
         if current_user.expired():
             current_user.logout()
             logout_user()
     except Exception, ex:
-        print('Anonymous user fucking around.')
+        if VERBOSE:
+            print('Anonymous user fucking around.')
 
     g.user = current_user
 
@@ -214,14 +218,16 @@ def login():
     """
     try:
         if current_user.is_authenticated():
-            print(current_user)
+            if VERBOSE:
+                print(current_user)
             return redirect(config['URL_BASE'][:-7]+'en/')
 
         form = request.form
         username = form['user']
         password = form['pass']
 
-        print(username)
+        if VERBOSE:
+            print(username)
 
         User.try_login(username, password)
         user = User.get_by_uname(username)
@@ -233,7 +239,8 @@ def login():
         return redirect(config['URL_BASE'][:-7]+'en/')
 
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
         return render_template('login_fail.html'), 200
 
 def eat_stat_form():
@@ -258,7 +265,8 @@ def eat_stat_form():
         message = "Your form was successfully submitted."
         return render_template('menu_interface.html', message=message)
     except Exception, ex:
-        print(ex)
+        if VEROBSE:
+            print(ex)
         return abort(500)
 
 def get_stats(date):
@@ -281,7 +289,8 @@ def get_stats(date):
         dbase.close()
         return dates
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
 
 def get_months():
     "Get the months that have data"
@@ -304,7 +313,8 @@ def get_months():
         # print(months)
         return months
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
 
 def get_csv(filename):
     "Get the data in CSV format"
@@ -328,7 +338,8 @@ def get_csv(filename):
         data.close()
         return csv_result
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
 
 def get_data_array(date):
     "Put the data into an array for Google charts"
@@ -355,7 +366,8 @@ def get_data_array(date):
 
         return stack
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
 
 def get_time_array(date):
     "Put the data into an array for Google charts"
@@ -383,7 +395,8 @@ def get_time_array(date):
         stack = copy.deepcopy(config['stack_b'])
         times = copy.deepcopy(config['times'])
 
-        print(times)
+        if VERBOSE:
+            print(times)
 
         for row in cur.fetchall():
             timeslot = str(row[0])
@@ -394,7 +407,8 @@ def get_time_array(date):
             times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_fr']] = row[3]
 
         
-        print(times)
+        if VERBOSE:
+            print(times)
             
         data.commit()
         data.close()
@@ -404,7 +418,8 @@ def get_time_array(date):
         #print(stack)
         return stack
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
 
 def get_weekday_array(date):
     """Put the data into an array for google charts"""
@@ -438,7 +453,8 @@ def get_weekday_array(date):
         return stack
 
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
 
 def parse_date(date):
     "Returns the year and the month separately from the date"
@@ -483,7 +499,8 @@ def get_missing(date):
 
         return missing
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
 
 def get_current_data(date):
     "Pull out the current data for a given day"
@@ -508,7 +525,8 @@ def get_current_data(date):
         return stats
 
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
 
 @app.route(config['URL_BASE'] + 'login/', methods=['GET', 'POST'])
 def login_form():
@@ -575,11 +593,13 @@ def edit_data(date):
             if VERBOSE:
                 print ('before page render: no stats')
             date = datetime.datetime.now().strftime("%Y-%m-%d")
-            print(date)
+            if VEROBSE:
+                print(date)
             stats = get_current_data(date)
             return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats=stats)
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
         return abort(500)
 
 @app.route(config['URL_BASE'] + 'download/')
@@ -601,7 +621,8 @@ def download_file(filename=None):
         response.headers["Content-Disposition"] = response_header
         return response
     except Exception, ex:
-        print(ex)
+        if VERBOSE:
+            print(ex)
         return abort(500)
 
 app.secret_key = secret
