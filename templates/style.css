@@ -12,3 +12,9 @@ th, td {
     border: solid 1px #BBBBBB;
     text-align: center;
 }
+.login {
+    padding: 2.5em;
+    background-color: #DDDDDD;
+    border: 1px solid #BBBBBB;
+    border-radius: 2em;
+}
