@@ -1,7 +1,6 @@
 #Blank lists/dicts to copy from. Used by refdesk.py
 import os
 
-secret = os.urandom(24).encode('hex')
 lists = {
     'stack_a' : [
         [

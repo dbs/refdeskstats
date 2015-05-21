@@ -10,7 +10,7 @@ from flask_babelex import Babel
 from flask_login import LoginManager, login_required, current_user, \
                         login_user, logout_user, AnonymousUserMixin
 from os.path import abspath, dirname
-from data import lists, secret
+from data import lists
 import ldap
 import sys
 import datetime
@@ -20,6 +20,7 @@ import copy
 import csv
 import random
 import ConfigParser
+from optparse import OptionParser
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
@@ -31,7 +32,12 @@ conf = ConfigParser.ConfigParser()
 conf.read('config.ini')
 
 def getconf(key):
-    'A little helper method to allow us the ability to pull values out of config safely. The section in the config is hardcoded, for now.'
+    """
+    A little helper method to allow us the ability to pull
+    values out of config safely. The section in the config
+    is hardcoded, for now.
+    """
+
     try:
         return conf.get('Refdesk', key)
     except Exception, ex:
@@ -61,20 +67,20 @@ opt['DB_NAME'] = getconf('DB Name')
 opt['HOST'] = getconf('Host')
 opt['PORT'] = getconf_int('Port')
 opt['SECRET'] = getconf('Secret')
+opt['LDAP_HOST'] = getconf('Ldap Host')
 
-for arg in sys.argv[1:]:
-    if arg == '-h':
-        print('Usage: python '+sys.argv[0]+' [-h] [-v] [-s] [-d]')
-        exit()
-    elif arg == '-v':
-        opt['VERBOSE'] = True
-        print('Running verbosely...')
-    elif arg == '-s':
-        opt['STUDENT'] = True
-        print('Logins are pointing to student directory')
-    elif arg == '-d':
-        opt['DEBUG'] = True
-        print('Running with debug...') 
+parser = OptionParser()
+parser.add_option('-d', '--debug', dest='DEBUG', action='store_true',
+            help='Provides debug output when unhandled exceptions occur.')
+parser.add_option('-v', '--verbose', dest='VERBOSE', action='store_true',
+            help='Provides verbose output for what is being done.')
+parser.add_option('-s', '--student', dest='STUDENT', action='store_true',
+            help='Connects to the student LDAP instead of the staff.')
+cmd_opt, junk = parser.parse_args()
+
+opt['DEBUG']  = cmd_opt.DEBUG
+opt['VERBOSE'] = cmd_opt.VERBOSE
+opt['STUDENT'] = cmd_opt.STUDENT
 
 def get_db():
     """
@@ -86,15 +92,15 @@ def get_db():
     """
     try:
         return psycopg2.connect(
-            database=getconf('Refdesk', 'DB Name'),
-            user=getconf('Refdesk','DB User')
+            database=opt['DB_NAME'],
+            user=opt['DB_USER']
         )
     except Exception, ex:
         if opt['VERBOSE']:
             print(ex)
 
 def get_ldap_connection():
-    conn = ldap.initialize('ldap://142.51.1.221:389')
+    conn = ldap.initialize('ldap://'+opt['LDAP_HOST'])
     return conn
 
 class User():
@@ -112,7 +118,7 @@ class User():
     @staticmethod 
     def try_login(username, password):
         conn = get_ldap_connection()
-        if STUDENT:
+        if opt['STUDENT']:
             conn.simple_bind_s('cn=%s,ou=STD,o=LUL' % username, password)
         else:
             conn.simple_bind_s('cn=%s,ou=Empl,o=LUL' % username, password)
@@ -318,7 +324,7 @@ def eat_stat_form():
         message = "Your form was successfully submitted."
         return render_template('menu_interface.html', message=message)
     except Exception, ex:
-        if VEROBSE:
+        if opt['VERBOSE']:
             print(ex)
         return abort(500)
 
@@ -646,7 +652,7 @@ def edit_data(date):
             if opt['VERBOSE']:
                 print ('before page render: no stats')
             date = datetime.datetime.now().strftime("%Y-%m-%d")
-            if VEROBSE:
+            if opt['VERBOSE']:
                 print(date)
             stats = get_current_data(date)
             return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats=stats)
