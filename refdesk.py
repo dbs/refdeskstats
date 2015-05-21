@@ -23,13 +23,29 @@ import copy
 import csv
 import random
 
-VERBOSE = config['VERBOSE']
+VERBOSE = False
+DEBUG = False
+STUDENT = False
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
 babel = Babel(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
+
+for arg in sys.argv[1:]:
+    if arg == '-h':
+        print('Usage: python '+sys.argv[0]+' [-h] [-v] [-s] [-d]')
+        exit()
+    elif arg == '-v':
+        VERBOSE = True
+        print('Running verbosely...')
+    elif arg == '-s':
+        STUDENT = True
+        print('Logins are pointing to student directory')
+    elif arg == '-d':
+        DEBUG = True
+        print('Running with debug...') 
 
 def get_db():
     """
@@ -67,7 +83,10 @@ class User():
     @staticmethod 
     def try_login(username, password):
         conn = get_ldap_connection()
-        conn.simple_bind_s('cn=%s,ou=Empl,o=LUL' % username, password)
+        if STUDENT:
+            conn.simple_bind_s('cn=%s,ou=STD,o=LUL' % username, password)
+        else:
+            conn.simple_bind_s('cn=%s,ou=Empl,o=LUL' % username, password)
  
     @staticmethod
     def get_by_id(id):
@@ -162,7 +181,12 @@ def pre_request():
         if VERBOSE:
             print('Anonymous user fucking around.')
 
-    g.user = current_user
+    try:
+        g.user = current_user
+    except Exception, ex:
+        if VERBOSE:
+            print('No user object set for session.')
+
 
     if request.view_args and 'lang' in request.view_args:
         g.current_lang = request.view_args['lang']
@@ -627,4 +651,4 @@ def download_file(filename=None):
 
 app.secret_key = secret
 if __name__ == '__main__':
-    app.run(debug=config['DEBUG'], host=config['HOST'], port=config['PORT'])
+    app.run(debug=DEBUG, host=config['HOST'], port=config['PORT'])
