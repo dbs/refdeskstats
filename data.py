@@ -1,16 +1,7 @@
-#Refdesk.py configurations.
+#Blank lists/dicts to copy from. Used by refdesk.py
+import os
 
-config = {
-    #Basic Settings
-    'URL_BASE': '/refdesk-stats/<lang>/',
-    'DB_NAME': 'refstats',
-    'DB_USER': 'victoria',
-    'HOST': '0.0.0.0',
-    'PORT': 6666,
-    'VERBOSE': False,
-    'DEBUG': False,
-
-    #Blank Lists to copy from.
+lists = {
     'stack_a' : [
         [
         'Timeslot',
