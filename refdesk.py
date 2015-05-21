@@ -10,10 +10,7 @@ from flask_babelex import Babel
 from flask_login import LoginManager, login_required, current_user, \
                         login_user, logout_user, AnonymousUserMixin
 from os.path import abspath, dirname
-from config import config
-# Secret key to be used. Host of the application should keep this secret.
-# The host should also generate their own secret key, however it may be.
-from secret import secret 
+from data import lists, secret
 import ldap
 import sys
 import datetime
@@ -22,10 +19,7 @@ import StringIO
 import copy
 import csv
 import random
-
-VERBOSE = False
-DEBUG = False
-STUDENT = False
+import ConfigParser
 
 app = Flask(__name__)
 app.root_path = abspath(dirname(__file__))
@@ -33,18 +27,53 @@ babel = Babel(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+conf = ConfigParser.ConfigParser()
+conf.read('config.ini')
+
+def getconf(key):
+    'A little helper method to allow us the ability to pull values out of config safely. The section in the config is hardcoded, for now.'
+    try:
+        return conf.get('Refdesk', key)
+    except Exception, ex:
+        return None
+
+def getconf_bool(key):
+    'Same as getconf, but returns a bool.'
+    try:
+        return conf.getboolean('Refdesk', key)
+    except Exception, ex:
+        return False
+
+def getconf_int(key):
+    'Same as getconf, but returns an int'
+    try:
+        return conf.getint('Refdesk', key)
+    except Exception, ex:
+        return 0
+
+opt = {}
+opt['URL_BASE'] = getconf('URL Base')
+opt['VERBOSE'] = getconf_bool('Verbose')
+opt['DEBUG'] = getconf_bool('Debug')
+opt['STUDENT'] = getconf_bool('Student')
+opt['DB_USER'] = getconf('DB User')
+opt['DB_NAME'] = getconf('DB Name')
+opt['HOST'] = getconf('Host')
+opt['PORT'] = getconf_int('Port')
+opt['SECRET'] = getconf('Secret')
+
 for arg in sys.argv[1:]:
     if arg == '-h':
         print('Usage: python '+sys.argv[0]+' [-h] [-v] [-s] [-d]')
         exit()
     elif arg == '-v':
-        VERBOSE = True
+        opt['VERBOSE'] = True
         print('Running verbosely...')
     elif arg == '-s':
-        STUDENT = True
+        opt['STUDENT'] = True
         print('Logins are pointing to student directory')
     elif arg == '-d':
-        DEBUG = True
+        opt['DEBUG'] = True
         print('Running with debug...') 
 
 def get_db():
@@ -57,11 +86,11 @@ def get_db():
     """
     try:
         return psycopg2.connect(
-            database=config['DB_NAME'],
-            user=config['DB_USER']
+            database=getconf('Refdesk', 'DB Name'),
+            user=getconf('Refdesk','DB User')
         )
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
 
 def get_ldap_connection():
@@ -77,7 +106,7 @@ class User():
             self.id = random.SystemRandom().randint(-0xFFFFFF, 0xFFFFFF)
         else:
             self.id = session_id
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(self.id)
    
     @staticmethod 
@@ -104,7 +133,7 @@ class User():
                 dbh.close()
                 return None
         except Exception, ex:
-            if VERBOSE:
+            if opt['VERBOSE']:
                 print(ex)
         dbh.close()
         # Executes is query returns no rows.
@@ -171,20 +200,20 @@ def get_locale():
 @app.before_request
 def pre_request():
     try:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(session['uid'])
         current_user = User.get_by_id(session['uid'])
         if current_user.expired():
             current_user.logout()
             logout_user()
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print('Anonymous user fucking around.')
 
     try:
         g.user = current_user
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print('No user object set for session.')
 
 
@@ -201,8 +230,8 @@ def load_user(id):
 def load_user(id):
     return User.get_by_id(id) 
 
-@app.route(config['URL_BASE'], methods=['GET', 'POST'])
-@app.route(config['URL_BASE'], methods=['GET', 'POST'])
+@app.route(opt['URL_BASE'], methods=['GET', 'POST'])
+@app.route(opt['URL_BASE'], methods=['GET', 'POST'])
 @login_required
 def submit(date=None):
     "Either show the form, or process the form"
@@ -210,7 +239,7 @@ def submit(date=None):
         return eat_stat_form()
     else:
         #return show_stat_form()
-        if VERBOSE:
+        if opt['VERBOSE']:
             print('Before queueing data edit.')
         return edit_data(date)
 
@@ -242,15 +271,15 @@ def login():
     """
     try:
         if current_user.is_authenticated():
-            if VERBOSE:
+            if opt['VERBOSE']:
                 print(current_user)
-            return redirect(config['URL_BASE'][:-7]+'en/')
+            return redirect(opt['URL_BASE'][:-7]+'en/')
 
         form = request.form
         username = form['user']
         password = form['pass']
 
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(username)
 
         User.try_login(username, password)
@@ -260,10 +289,10 @@ def login():
             user.add_to_db()
         session['uid'] = user.id
         login_user(user)
-        return redirect(config['URL_BASE'][:-7]+'en/')
+        return redirect(opt['URL_BASE'][:-7]+'en/')
 
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
         return render_template('login_fail.html'), 200
 
@@ -274,11 +303,11 @@ def eat_stat_form():
         cur = dbh.cursor()
         form = request.form
         fdate = form['refdate']
-        if VERBOSE:
+        if opt['VERBOSE']:
             print('reached data insertion...')
-        for time in config['timelist']:
-            for stat in config['helplist']:
-                if VERBOSE:
+        for time in lists['timelist']:
+            for stat in lists['helplist']:
+                if opt['VERBOSE']:
                     print(time, stat)
                 val_en = form[time+stat+'_en']
                 val_fr = form[time+stat+'_fr']
@@ -313,7 +342,7 @@ def get_stats(date):
         dbase.close()
         return dates
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
 
 def get_months():
@@ -337,7 +366,7 @@ def get_months():
         # print(months)
         return months
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
 
 def get_csv(filename):
@@ -362,7 +391,7 @@ def get_csv(filename):
         data.close()
         return csv_result
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
 
 def get_data_array(date):
@@ -373,14 +402,14 @@ def get_data_array(date):
         cur.execute("""SELECT refdate, reftime, reftype, refcount_en,
                        refcount_fr FROM refstatview WHERE refdate=%s""",
                        (str(date),))
-        stack = copy.deepcopy(config['stack_a'])
-        array = copy.deepcopy(config['array'])
+        stack = copy.deepcopy(lists['stack_a'])
+        array = copy.deepcopy(lists['array'])
 
         for row in cur.fetchall():
             timeslot = str(row[1])
             stat = row[2]
-            array[config['helpcodes'][stat+'_en']-1][config['timecodes'][timeslot]] = row[3]
-            array[config['helpcodes'][stat+'_fr']-1][config['timecodes'][timeslot]] = row[4]
+            array[lists['helpcodes'][stat+'_en']-1][lists['timecodes'][timeslot]] = row[3]
+            array[lists['helpcodes'][stat+'_fr']-1][lists['timecodes'][timeslot]] = row[4]
 
         data.commit()
         data.close()
@@ -390,7 +419,7 @@ def get_data_array(date):
 
         return stack
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
 
 def get_time_array(date):
@@ -402,7 +431,7 @@ def get_time_array(date):
         #"""If we want everyday in the month"""
         if len(str(date)) == 7:
             date_year, date_month = parse_date(str(date))
-            if VERBOSE:
+            if opt['VERBOSE']:
                 print('viewing:'+ str((date_year,  date_month)))
             cur.execute("""SELECT reftime, reftype,
                         sum(refcount_en), sum(refcount_fr)
@@ -416,22 +445,22 @@ def get_time_array(date):
                         FROM refstatview WHERE refdate=%s""",
                         (str(date),))
 
-        stack = copy.deepcopy(config['stack_b'])
-        times = copy.deepcopy(config['times'])
+        stack = copy.deepcopy(lists['stack_b'])
+        times = copy.deepcopy(lists['times'])
 
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(times)
 
         for row in cur.fetchall():
             timeslot = str(row[0])
             stat = row[1]
             #print(helpcodes[stat])
-            #if timeslot in config['timelist']:
-            times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_en']] = row[2]
-            times[config['timecodes'][timeslot]-1][config['helpcodes'][stat+'_fr']] = row[3]
+            #if timeslot in lists['timelist']:
+            times[lists['timecodes'][timeslot]-1][lists['helpcodes'][stat+'_en']] = row[2]
+            times[lists['timecodes'][timeslot]-1][lists['helpcodes'][stat+'_fr']] = row[3]
 
         
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(times)
             
         data.commit()
@@ -442,7 +471,7 @@ def get_time_array(date):
         #print(stack)
         return stack
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
 
 def get_weekday_array(date):
@@ -457,16 +486,16 @@ def get_weekday_array(date):
             WHERE refdate::text LIKE %s
             ORDER BY day_of_week""", (str(month),))
 
-        stack = copy.deepcopy(config['stack_b'])
-        days = copy.deepcopy(config['days'])
+        stack = copy.deepcopy(lists['stack_b'])
+        days = copy.deepcopy(lists['days'])
 
         for row in cur.fetchall():
             """Get the data for each day of the month and do something useful with it"""
             timeslot = row[0]
             stat = row[1]
             if row[4] >= 0 and row[4] <= 6:
-                days[int(row[4])][config['helpcodes'][stat+'_en']] += row[2]
-                days[int(row[4])][config['helpcodes'][stat+'_fr']] += row[3]
+                days[int(row[4])][lists['helpcodes'][stat+'_en']] += row[2]
+                days[int(row[4])][lists['helpcodes'][stat+'_fr']] += row[3]
 
         data.commit()
         data.close()
@@ -477,7 +506,7 @@ def get_weekday_array(date):
         return stack
 
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
 
 def parse_date(date):
@@ -489,8 +518,8 @@ def parse_date(date):
 def parse_stat(stat):
     "Returns the type of stat and the time slot"
 
-    for s in config['helplist']:
-        if VERBOSE: 
+    for s in lists['helplist']:
+        if opt['VERBOSE']: 
             print(stat)
         pos = stat.find(s)
         if pos > -1:
@@ -523,7 +552,7 @@ def get_missing(date):
 
         return missing
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
 
 def get_current_data(date):
@@ -549,25 +578,25 @@ def get_current_data(date):
         return stats
 
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
 
-@app.route(config['URL_BASE'] + 'login/', methods=['GET', 'POST'])
+@app.route(opt['URL_BASE'] + 'login/', methods=['GET', 'POST'])
 def login_form():
     if request.method == 'POST':
         return login()
     else:
         return render_template('login.html');
 
-@app.route(config['URL_BASE'] + 'logout/', methods=['GET'])
+@app.route(opt['URL_BASE'] + 'logout/', methods=['GET'])
 @login_required
 def logout():
     current_user.logout()
     logout_user()
-    return redirect(config['URL_BASE'][:-7]+'en/login/')
+    return redirect(opt['URL_BASE'][:-7]+'en/login/')
 
-@app.route(config['URL_BASE'] + 'view/', methods=['GET'])
-@app.route(config['URL_BASE'] + 'view/<date>', methods=['GET'])
+@app.route(opt['URL_BASE'] + 'view/', methods=['GET'])
+@app.route(opt['URL_BASE'] + 'view/<date>', methods=['GET'])
 @login_required
 def show_stats(date=None):
     "Lets try to get all dates with data input"
@@ -594,8 +623,8 @@ def show_stats(date=None):
     except:
         return abort(500)
 
-@app.route(config['URL_BASE'], methods=['GET','POST'])
-@app.route(config['URL_BASE'] + 'edit/<date>', methods=['GET','POST'])
+@app.route(opt['URL_BASE'], methods=['GET','POST'])
+@app.route(opt['URL_BASE'] + 'edit/<date>', methods=['GET','POST'])
 @login_required
 def edit_data(date):
     "Add data to missing days or edit current data"
@@ -604,17 +633,17 @@ def edit_data(date):
     try:
         if date:
             stats = get_current_data(date)
-            #if VERBOSE:
+            #if opt['VERBOSE']:
             #    print(date + 'stats:' + stats)
             #if stats:
-            if VERBOSE:
+            if opt['VERBOSE']:
                 print ('before page render: stats found')
             return render_template('stat_form.html', today=date, stats=stats)
             #else:
                 #return render_template('stat_form.html', today=date)
                 #return render_template('edit_stat_form.html', today=date, stats=stats)
         else:
-            if VERBOSE:
+            if opt['VERBOSE']:
                 print ('before page render: no stats')
             date = datetime.datetime.now().strftime("%Y-%m-%d")
             if VEROBSE:
@@ -622,12 +651,12 @@ def edit_data(date):
             stats = get_current_data(date)
             return render_template('stat_form.html', today=((datetime.datetime.now() + datetime.timedelta(hours=-2)).date().isoformat()), stats=stats)
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
         return abort(500)
 
-@app.route(config['URL_BASE'] + 'download/')
-@app.route(config['URL_BASE'] + 'download/<filename>')
+@app.route(opt['URL_BASE'] + 'download/')
+@app.route(opt['URL_BASE'] + 'download/<filename>')
 @login_required
 def download_file(filename=None):
     "Downloads a file in CSV format"
@@ -645,10 +674,15 @@ def download_file(filename=None):
         response.headers["Content-Disposition"] = response_header
         return response
     except Exception, ex:
-        if VERBOSE:
+        if opt['VERBOSE']:
             print(ex)
         return abort(500)
 
-app.secret_key = secret
+if opt['SECRET']:
+    app.secret_key = opt['SECRET']
+else:
+    print('No secret key. Aborting.')
+    exit()
+
 if __name__ == '__main__':
-    app.run(debug=DEBUG, host=config['HOST'], port=config['PORT'])
+    app.run(debug=opt['DEBUG'], host=opt['HOST'], port=opt['PORT'])
