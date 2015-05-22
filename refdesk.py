@@ -11,6 +11,7 @@ from flask_login import LoginManager, login_required, current_user, \
                         login_user, logout_user, AnonymousUserMixin
 from os.path import abspath, dirname
 from data import lists
+from conf import ConfigFile
 import ldap
 import sys
 import datetime
@@ -28,47 +29,7 @@ babel = Babel(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-conf = ConfigParser.ConfigParser()
-conf.read('config.ini')
-
-def getconf(key):
-    """
-    A little helper method to allow us the ability to pull
-    values out of config safely. The section in the config
-    is hardcoded, for now.
-    """
-
-    try:
-        return conf.get('Refdesk', key)
-    except Exception, ex:
-        return None
-
-def getconf_bool(key):
-    'Same as getconf, but returns a bool.'
-    try:
-        return conf.getboolean('Refdesk', key)
-    except Exception, ex:
-        return False
-
-def getconf_int(key):
-    'Same as getconf, but returns an int'
-    try:
-        return conf.getint('Refdesk', key)
-    except Exception, ex:
-        return 0
-
 opt = {}
-opt['URL_BASE'] = getconf('URL Base')
-opt['VERBOSE'] = getconf_bool('Verbose')
-opt['DEBUG'] = getconf_bool('Debug')
-opt['STUDENT'] = getconf_bool('Student')
-opt['DB_USER'] = getconf('DB User')
-opt['DB_NAME'] = getconf('DB Name')
-opt['HOST'] = getconf('Host')
-opt['PORT'] = getconf_int('Port')
-opt['SECRET'] = getconf('Secret')
-opt['LDAP_HOST'] = getconf('Ldap Host')
-
 parser = OptionParser()
 parser.add_option('-d', '--debug', dest='DEBUG', action='store_true',
             help='Provides debug output when unhandled exceptions occur.')
@@ -81,6 +42,15 @@ cmd_opt, junk = parser.parse_args()
 opt['DEBUG']  = cmd_opt.DEBUG
 opt['VERBOSE'] = cmd_opt.VERBOSE
 opt['STUDENT'] = cmd_opt.STUDENT
+
+if opt['VERBOSE']:
+    print('Root path: ' + app.root_path)
+c = ConfigFile(app.root_path + '/config.ini')
+if opt['VERBOSE']:
+    print(app.root_path + '/config.ini')
+keys = c.getsection('Refdesk') 
+for key in keys:
+    opt[key] = keys[key]
 
 def get_db():
     """
@@ -227,11 +197,6 @@ def pre_request():
         g.current_lang = request.view_args['lang']
         request.view_args.pop('lang')
 
-
-@login_manager.user_loader
-def load_user(id):
-    return User.get_by_id(id) 
-
 @login_manager.user_loader
 def load_user(id):
     return User.get_by_id(id) 
@@ -279,7 +244,7 @@ def login():
         if current_user.is_authenticated():
             if opt['VERBOSE']:
                 print(current_user)
-            return redirect(opt['URL_BASE'][:-7]+'en/')
+            return redirect(url_for('edit_stats'), lang='en')
 
         form = request.form
         username = form['user']
@@ -295,12 +260,12 @@ def login():
             user.add_to_db()
         session['uid'] = user.id
         login_user(user)
-        return redirect(opt['URL_BASE'][:-7]+'en/')
+        return redirect(url_for('login_form'), lang='en')
 
     except Exception, ex:
         if opt['VERBOSE']:
             print(ex)
-        return render_template('login_fail.html'), 200
+        return render_template('login_fail.html'), 401
 
 def eat_stat_form():
     "Shove the form data into the database"
@@ -599,7 +564,7 @@ def login_form():
 def logout():
     current_user.logout()
     logout_user()
-    return redirect(opt['URL_BASE'][:-7]+'en/login/')
+    return redirect(url_for('login', lang='en'))
 
 @app.route(opt['URL_BASE'] + 'view/', methods=['GET'])
 @app.route(opt['URL_BASE'] + 'view/<date>', methods=['GET'])
