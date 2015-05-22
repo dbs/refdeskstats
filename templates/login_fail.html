@@ -10,6 +10,6 @@
     <body>
         <h1>{%trans%}Login Failed.{%endtrans%}</h1>
         <br />
-        <a href="/refdesk-stats/en/login/">Try again.</a>
+        <a href="{{ url_for('login_form', lang=_('en')) }}">Try again.</a>
     </body>
 </html>

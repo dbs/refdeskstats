@@ -45,8 +45,8 @@
     {% include "options.html" %}
     <div id="menu">
         <ul>
-            <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}">{%trans%}Enter Statistics{%endtrans%}</a></li>
-            <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}/view">{%trans%}View Statistics{%endtrans%}</a></li>
+            <li><a href="{{ url_for('edit_data', lang=_('en')) }}">{%trans%}Enter Statistics{%endtrans%}</a></li>
+            <li><a href="{{ url_for('show_stats', date=date, lang=_('fr')) }}">{%trans%}View Statistics{%endtrans%}</a></li>
         </ul>
         <hr>
     </div>
@@ -59,7 +59,7 @@
 
     </div>
     <!--<p><a href="/refdesk-stats/download/{{date}}">Download this data ({{date}})</a></p>-->
-    <p><a href="/refdesk-stats/{%trans%}en{%endtrans%}/edit/{{date}}">{%trans%}Edit this data{%endtrans%}</a></p>
+    <p><a href="{{ url_for('edit_data', date=date, lang=_('en')) }}">{%trans%}Edit this data{%endtrans%}</a></p>
 
     <details>
         <summary>{%trans%}Statistics broken down by month{%endtrans%}</summary>
