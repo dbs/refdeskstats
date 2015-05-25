@@ -245,7 +245,7 @@ def login():
         if current_user.is_authenticated():
             if opt['VERBOSE']:
                 print(current_user)
-            return redirect(url_for('edit_stats'), lang='en')
+            return redirect(url_for('edit_data', lang='en'))
 
         form = request.form
         username = form['user']
@@ -261,7 +261,7 @@ def login():
             user.add_to_db()
         session['uid'] = user.id
         login_user(user)
-        return redirect(url_for('login_form'), lang='en')
+        return redirect(url_for('edit_data', lang='en'))
 
     except Exception, ex:
         if opt['VERBOSE']:
@@ -565,7 +565,7 @@ def login_form():
 def logout():
     current_user.logout()
     logout_user()
-    return redirect(url_for('login', lang='en'))
+    return redirect(url_for('login_form', lang='en'))
 
 @app.route(opt['URL_BASE'] + 'view/', methods=['GET'])
 @app.route(opt['URL_BASE'] + 'view/<date>', methods=['GET'])
