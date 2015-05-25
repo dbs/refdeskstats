@@ -10,7 +10,7 @@
     <body>
         <h1>{%trans%}Ref Desk Stats Login{%endtrans%}</h1>
         <div class="login">
-            <form method="POST" action="/refdesk-stats/en/login/">
+            <form method="POST" action="{{ url_for('login_form', lang=_('en')) }}">
                 Username: <input type="text" name="user" /><br/>
                 Password: <input type="password" name="pass" /><br/>
                 <br />
