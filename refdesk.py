@@ -202,8 +202,8 @@ def pre_request():
 def load_user(id):
     return User.get_by_id(id) 
 
-@app.route(opt['URL_BASE'], methods=['GET', 'POST'])
-@app.route(opt['URL_BASE'], methods=['GET', 'POST'])
+@app.route('/<lang>', methods=['GET', 'POST'])
+@app.route('/<lang>', methods=['GET', 'POST'])
 @login_required
 def submit(date=None):
     "Either show the form, or process the form"
@@ -553,22 +553,22 @@ def get_current_data(date):
         if opt['VERBOSE']:
             print(ex)
 
-@app.route(opt['URL_BASE'] + 'login/', methods=['GET', 'POST'])
+@app.route('/<lang>/login/', methods=['GET', 'POST'])
 def login_form():
     if request.method == 'POST':
         return login()
     else:
         return render_template('login.html');
 
-@app.route(opt['URL_BASE'] + 'logout/', methods=['GET'])
+@app.route('/<lang>/logout/', methods=['GET'])
 @login_required
 def logout():
     current_user.logout()
     logout_user()
     return redirect(url_for('login_form', lang='en'))
 
-@app.route(opt['URL_BASE'] + 'view/', methods=['GET'])
-@app.route(opt['URL_BASE'] + 'view/<date>', methods=['GET'])
+@app.route('/<lang>/view/', methods=['GET'])
+@app.route('/<lang>/view/<date>', methods=['GET'])
 @login_required
 def show_stats(date=None):
     "Lets try to get all dates with data input"
@@ -595,8 +595,8 @@ def show_stats(date=None):
     except:
         return abort(500)
 
-@app.route(opt['URL_BASE'], methods=['GET','POST'])
-@app.route(opt['URL_BASE'] + 'edit/<date>', methods=['GET','POST'])
+@app.route('/<lang>', methods=['GET','POST'])
+@app.route('/<lang>/edit/<date>', methods=['GET','POST'])
 @login_required
 def edit_data(date):
     "Add data to missing days or edit current data"
@@ -627,8 +627,8 @@ def edit_data(date):
             print(ex)
         return abort(500)
 
-@app.route(opt['URL_BASE'] + 'download/')
-@app.route(opt['URL_BASE'] + 'download/<filename>')
+@app.route('/<lang>/download/')
+@app.route('/<lang>/download/<filename>')
 @login_required
 def download_file(filename=None):
     "Downloads a file in CSV format"
