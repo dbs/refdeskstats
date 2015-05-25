@@ -39,18 +39,19 @@ parser.add_option('-s', '--student', dest='STUDENT', action='store_true',
             help='Connects to the student LDAP instead of the staff.')
 cmd_opt, junk = parser.parse_args()
 
+c = ConfigFile(app.root_path + '/config.ini')
+keys = c.getsection('Refdesk') 
+for key in keys:
+    opt[key] = keys[key]
+
 opt['DEBUG']  = cmd_opt.DEBUG
 opt['VERBOSE'] = cmd_opt.VERBOSE
 opt['STUDENT'] = cmd_opt.STUDENT
 
 if opt['VERBOSE']:
     print('Root path: ' + app.root_path)
-c = ConfigFile(app.root_path + '/config.ini')
 if opt['VERBOSE']:
     print(app.root_path + '/config.ini')
-keys = c.getsection('Refdesk') 
-for key in keys:
-    opt[key] = keys[key]
 
 def get_db():
     """
