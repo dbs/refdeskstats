@@ -39,18 +39,19 @@ parser.add_option('-s', '--student', dest='STUDENT', action='store_true',
             help='Connects to the student LDAP instead of the staff.')
 cmd_opt, junk = parser.parse_args()
 
+c = ConfigFile(app.root_path + '/config.ini')
+keys = c.getsection('Refdesk') 
+for key in keys:
+    opt[key] = keys[key]
+
 opt['DEBUG']  = cmd_opt.DEBUG
 opt['VERBOSE'] = cmd_opt.VERBOSE
 opt['STUDENT'] = cmd_opt.STUDENT
 
 if opt['VERBOSE']:
     print('Root path: ' + app.root_path)
-c = ConfigFile(app.root_path + '/config.ini')
 if opt['VERBOSE']:
     print(app.root_path + '/config.ini')
-keys = c.getsection('Refdesk') 
-for key in keys:
-    opt[key] = keys[key]
 
 def get_db():
     """
@@ -201,8 +202,8 @@ def pre_request():
 def load_user(id):
     return User.get_by_id(id) 
 
-@app.route(opt['URL_BASE'], methods=['GET', 'POST'])
-@app.route(opt['URL_BASE'], methods=['GET', 'POST'])
+@app.route('/<lang>', methods=['GET', 'POST'])
+@app.route('/<lang>', methods=['GET', 'POST'])
 @login_required
 def submit(date=None):
     "Either show the form, or process the form"
@@ -244,7 +245,7 @@ def login():
         if current_user.is_authenticated():
             if opt['VERBOSE']:
                 print(current_user)
-            return redirect(url_for('edit_stats'), lang='en')
+            return redirect(url_for('edit_data', lang='en'))
 
         form = request.form
         username = form['user']
@@ -260,7 +261,7 @@ def login():
             user.add_to_db()
         session['uid'] = user.id
         login_user(user)
-        return redirect(url_for('login_form'), lang='en')
+        return redirect(url_for('edit_data', lang='en'))
 
     except Exception, ex:
         if opt['VERBOSE']:
@@ -552,22 +553,22 @@ def get_current_data(date):
         if opt['VERBOSE']:
             print(ex)
 
-@app.route(opt['URL_BASE'] + 'login/', methods=['GET', 'POST'])
+@app.route('/<lang>/login/', methods=['GET', 'POST'])
 def login_form():
     if request.method == 'POST':
         return login()
     else:
         return render_template('login.html');
 
-@app.route(opt['URL_BASE'] + 'logout/', methods=['GET'])
+@app.route('/<lang>/logout/', methods=['GET'])
 @login_required
 def logout():
     current_user.logout()
     logout_user()
-    return redirect(url_for('login', lang='en'))
+    return redirect(url_for('login_form', lang='en'))
 
-@app.route(opt['URL_BASE'] + 'view/', methods=['GET'])
-@app.route(opt['URL_BASE'] + 'view/<date>', methods=['GET'])
+@app.route('/<lang>/view/', methods=['GET'])
+@app.route('/<lang>/view/<date>', methods=['GET'])
 @login_required
 def show_stats(date=None):
     "Lets try to get all dates with data input"
@@ -594,8 +595,8 @@ def show_stats(date=None):
     except:
         return abort(500)
 
-@app.route(opt['URL_BASE'], methods=['GET','POST'])
-@app.route(opt['URL_BASE'] + 'edit/<date>', methods=['GET','POST'])
+@app.route('/<lang>', methods=['GET','POST'])
+@app.route('/<lang>/edit/<date>', methods=['GET','POST'])
 @login_required
 def edit_data(date):
     "Add data to missing days or edit current data"
@@ -626,8 +627,8 @@ def edit_data(date):
             print(ex)
         return abort(500)
 
-@app.route(opt['URL_BASE'] + 'download/')
-@app.route(opt['URL_BASE'] + 'download/<filename>')
+@app.route('/<lang>/download/')
+@app.route('/<lang>/download/<filename>')
 @login_required
 def download_file(filename=None):
     "Downloads a file in CSV format"
