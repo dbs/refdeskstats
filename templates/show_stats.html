@@ -6,11 +6,11 @@
 </head>
 <body>
     <h1>{%trans%}Ref Desk Statistics{%endtrans%}</h1>
-    <a href='/refdesk-stats/{%trans%}fr{%endtrans%}/'>{%trans%}Francais{%endtrans%}</a>
+    {% include "options.html" %}
     <div id="menu">
         <ul>
-            <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}">{%trans%}Enter Statistics{%endtrans%}</a></li>
-            <li><a href="/refdesk-stats/{%trans%}en{%endtrans%}/view">{%trans%}View Statistics{%endtrans%}</a></li>
+            <li><a href="{{ url_for('edit_data', lang=_('en')) }}">{%trans%}Enter Statistics{%endtrans%}</a></li>
+            <li><a href="{{ url_for('show_stats', lang=_('en')) }}">{%trans%}View Statistics{%endtrans%}</a></li>
         </ul>
         <hr>
     </div>
@@ -26,7 +26,7 @@
         </ul>
     </details>
 
-	<li><a href="/refdesk-stats/{%trans%}en{%endtrans%}/download/allstats.csv">{%trans%}Download all Statistics{%endtrans%}</a></li>
+  <li><a href="{{ url_for('download_file', lang=_('en')) }}">{%trans%}Download all Statistics{%endtrans%}</a></li>
     
     <!--<p>Listed below are all the days that have statistics entered</p>
     <ul>
@@ -35,7 +35,7 @@
         {% else %}
         <li>Unpossible, no dates have data input</li>
         {% endfor %}
-	<li><a href="/refdesk-stats/download">All Statistics</a>(Download Only)</li>
+  <li><a href="/refdesk-stats/download">All Statistics</a>(Download Only)</li>
     </ul>-->
 </body>
 </html>

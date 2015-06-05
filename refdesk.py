@@ -194,15 +194,18 @@ def pre_request():
             print('No user object set for session.')
 
     if request.view_args and 'lang' in request.view_args:
-        g.current_lang = request.view_args['lang']
-        request.view_args.pop('lang')
+        lang = request.view_args['lang']
+        if lang in ['en', 'fr']:
+            g.current_lang = lang
+            request.view_args.pop('lang')
+        else:
+            return abort(404)
 
 @login_manager.user_loader
 def load_user(id):
     return User.get_by_id(id) 
 
-@app.route('/<lang>', methods=['GET', 'POST'])
-@app.route('/<lang>', methods=['GET', 'POST'])
+@app.route('/<lang>/', methods=['GET', 'POST'])
 @login_required
 def submit(date=None):
     "Either show the form, or process the form"
@@ -244,7 +247,7 @@ def login():
         if current_user.is_authenticated():
             if opt['VERBOSE']:
                 print(current_user)
-            return redirect(url_for('edit_data', lang='en'))
+            return redirect(url_for('edit_data', lang='en')), 302
 
         form = request.form
         username = form['user']
@@ -260,7 +263,7 @@ def login():
             user.add_to_db()
         session['uid'] = user.id
         login_user(user)
-        return redirect(url_for('edit_data', lang='en'))
+        return redirect(url_for('edit_data', lang='en')), 302
 
     except Exception, ex:
         if opt['VERBOSE']:
@@ -564,7 +567,7 @@ def login_form():
 def logout():
     current_user.logout()
     logout_user()
-    return redirect(url_for('login_form', lang='en'))
+    return redirect(url_for('login_form', lang='en')), 302
 
 @app.route('/<lang>/view/', methods=['GET'])
 @app.route('/<lang>/view/<date>', methods=['GET'])
@@ -594,7 +597,7 @@ def show_stats(date=None):
     except:
         return abort(500)
 
-@app.route('/<lang>', methods=['GET','POST'])
+@app.route('/<lang>/', methods=['GET','POST'])
 @app.route('/<lang>/edit/<date>', methods=['GET','POST'])
 @login_required
 def edit_data(date):
