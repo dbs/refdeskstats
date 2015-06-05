@@ -185,14 +185,13 @@ def pre_request():
             logout_user()
     except Exception, ex:
         if opt['VERBOSE']:
-            print('Anonymous user fucking around.')
+            print('User is anonymous.')
 
     try:
         g.user = current_user
     except Exception, ex:
         if opt['VERBOSE']:
             print('No user object set for session.')
-
 
     if request.view_args and 'lang' in request.view_args:
         g.current_lang = request.view_args['lang']
