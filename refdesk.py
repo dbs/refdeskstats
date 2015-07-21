@@ -696,4 +696,13 @@ def favicon():
     return '', 404
 
 if __name__ == '__main__':
-    app.run(debug=opt['DEBUG'], host=opt['HOST'], port=opt['PORT'])
+    #app.run(debug=opt['DEBUG'], host=opt['HOST'], port=opt['PORT'])
+    from twisted.internet import reactor
+    from twisted.web.server import Site
+    from twisted.web.wsgi import WSGIResource
+
+    resource = WSGIResource(reactor, reactor.getThreadPool(), app)
+    site = Site(resource)
+
+    reactor.listenTCP(opt['PORT'], site, interface=opt['HOST'])
+    reactor.run()
