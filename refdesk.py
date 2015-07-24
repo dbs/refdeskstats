@@ -103,7 +103,9 @@ def get_db():
     try:
         return psycopg2.connect(
             database=opt['DB_NAME'],
-            user=opt['DB_USER']
+            host=opt['DB_HOST'],
+            user=opt['DB_USER'],
+            password=opt['DB_PASS']
         )
     except Exception, ex:
         if opt['VERBOSE']:

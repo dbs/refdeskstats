@@ -8,5 +8,5 @@
   float:      top-right;
 ">
   <a href="{{ url_for('logout', lang=_('en')) }}">{%trans%}Log Out{%endtrans%}</a><br />
-  <a href="{{ url_for('edit_data', lang=_('fr')) }}">{%trans%}Francais{%endtrans%}</a>
+  <a href="{{ url_for(request.endpoint, lang=_('fr')) }}">{%trans%}Francais{%endtrans%}</a>
 </div>
