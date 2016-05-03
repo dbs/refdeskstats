@@ -388,8 +388,8 @@ def get_csv(filename):
         data = get_db()
         cur = data.cursor()
         #print(cur.mogrify("SELECT refdate, refstat, refcount FROM refstats WHERE refdate = %s", (str(filename),)))
-        if str(filename) == 'allstats.csv':
-            cur.execute("SELECT refdate, reftime, reftype, refcount_en, refcount_fr FROM refstatview")
+        if str(filename) == 'allstats':
+            cur.execute("SELECT refdate, reftime, reftype, refcount_en, refcount_fr FROM refstatview ORDER BY refdate, reftime, reftype")
         else:
             cur.execute("""SELECT refdate, reftime, reftype, refcount_en, refcount_fr
                         FROM refstatview WHERE refdate=%s""",
@@ -671,16 +671,13 @@ def edit_data(date):
 @app.route('/<lang>/download/')
 @app.route('/<lang>/download/<filename>')
 @login_required
-def download_file(filename=None):
+def download_file(filename='allstats'):
     "Downloads a file in CSV format"
     try:
-        if filename:
-            filename = str(filename)
-            csv_data = get_csv(filename)
-            csv_file = filename + ".csv"
-        else:
-            csv_data = get_csv('alldata')
-            csv_file = filename
+        filename = str(filename)
+        csv_data = get_csv(filename)
+        csv_file = filename + ".csv"
+
         response = make_response(csv_data)
         response_header = "attachment; fname=" + csv_file
         response.headers["Content-Type"] = 'text/csv'
