@@ -21,7 +21,7 @@
   <div>
     <form method="post">
       Date: <input type="date" id="refdate" name="refdate"{% if today %} value={{ today }} {% endif %}>
-      <button type='button' onclick="window.location.replace('{{ url_for('edit_data', lang=_('en')) }}'+document.getElementById('refdate').value)">{%trans%}Load Date{%endtrans%}</button>
+      <button type='button' onclick="window.location.replace('{{ url_for('edit_data', lang=_('en')) }}'+'/edit/'+document.getElementById('refdate').value)">{%trans%}Load Date{%endtrans%}</button>
       <br />
       <br />
       <table style='float: left;'>
